@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useAuthStore } from '../../store/auth.store'
 import Spinner from '../../components/ui/Spinner'
@@ -13,14 +13,16 @@ export default function LoginPage() {
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const { loginWithGoogle, loginWithEmail } = useAuth()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
 
-  const user = useAuthStore((s) => s.user)
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(user?.role === 'OWNER' ? '/owner/dashboard' : '/orders', { replace: true })
+    }
+  }, [isAuthenticated, user, navigate])
 
-  if (isAuthenticated) {
-    navigate(user?.role === 'OWNER' ? '/owner/dashboard' : '/orders', { replace: true })
-    return null
-  }
+  if (isAuthenticated) return null
 
   const handleGoogleLogin = async () => {
     setError('')

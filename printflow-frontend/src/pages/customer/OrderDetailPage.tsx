@@ -142,8 +142,19 @@ export default function OrderDetailPage() {
           <Card className="flex flex-col h-full">
             <h3 className="font-headline-md text-headline-md text-primary mb-stack-md">Digital Receipt</h3>
             <div className="bg-surface-container-low p-stack-md rounded border border-outline-variant/50 mb-stack-md font-code-sm text-code-sm text-on-surface">
-              <div className="flex justify-between mb-2"><span>Subtotal:</span><span>{formatCurrency(order.totalAmount)}</span></div>
-              <div className="flex justify-between mb-2"><span>Status:</span><span>{order.paymentStatus?.replace('_', ' ') || 'Pending'}</span></div>
+              <div className="flex justify-between mb-2"><span>Subtotal:</span><span className="font-semibold">{formatCurrency(order.totalAmount)}</span></div>
+              <div className="flex justify-between mb-2"><span>Status:</span><span className="font-semibold">{order.paymentStatus?.replace('_', ' ') || 'Pending'}</span></div>
+              {order.payment?.transactionId && (
+                <div className="flex justify-between mb-2"><span>UTR / Txn ID:</span><span className="font-semibold">{order.payment.transactionId}</span></div>
+              )}
+              {order.payment?.proofUrl && (
+                <div className="border-t border-outline-variant/50 pt-2 mt-2">
+                  <p className="font-label-md text-label-md text-on-surface-variant mb-1">Payment Screenshot</p>
+                  <a href={order.payment.proofUrl} target="_blank" rel="noopener noreferrer">
+                    <img src={order.payment.proofUrl} alt="Payment proof" className="max-h-36 rounded border border-outline-variant cursor-pointer hover:opacity-80" />
+                  </a>
+                </div>
+              )}
               {(order as any).delayReason && (
                 <div className="border-t border-outline-variant/50 my-2 pt-2">
                   <p className="text-error font-semibold">Delay: {(order as any).delayReason}</p>

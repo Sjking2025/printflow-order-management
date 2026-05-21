@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -44,11 +45,10 @@ public class PaymentController {
             @Valid @RequestBody VerifyPaymentRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
         Payment payment = paymentService.verifyPayment(paymentId, request, principal.id());
-        Map<String, Object> data = Map.of(
-            "paymentId", payment.getId(),
-            "status", payment.getStatus(),
-            "verifiedAt", payment.getVerifiedAt()
-        );
+        Map<String, Object> data = new HashMap<>();
+        data.put("paymentId", payment.getId());
+        data.put("status", payment.getStatus());
+        data.put("verifiedAt", payment.getVerifiedAt());
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 }

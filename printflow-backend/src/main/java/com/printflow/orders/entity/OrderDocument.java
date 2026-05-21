@@ -1,5 +1,6 @@
 package com.printflow.orders.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class OrderDocument {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnoreProperties({"documents"})
     private Order order;
 
     @Column(name = "file_name", nullable = false, length = 500)

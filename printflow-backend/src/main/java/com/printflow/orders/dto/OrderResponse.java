@@ -35,7 +35,7 @@ public record OrderResponse(
                                    BigDecimal subtotal) {}
     public record PaymentInfo(UUID id, BigDecimal amount, String method,
                               String status, String proofUrl,
-                              OffsetDateTime verifiedAt) {}
+                              String transactionId, OffsetDateTime verifiedAt) {}
     public record StatusHistoryEntry(String fromStatus, String toStatus,
                                      String changedBy, String note,
                                      OffsetDateTime createdAt) {}

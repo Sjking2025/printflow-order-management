@@ -39,6 +39,7 @@ export interface Order {
     method: string
     status: string
     proofUrl?: string
+    transactionId?: string
     verifiedAt?: string
   }
   statusHistory?: {

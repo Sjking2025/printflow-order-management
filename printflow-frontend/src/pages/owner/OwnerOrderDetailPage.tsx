@@ -14,6 +14,23 @@ import StatusTimeline from '../../components/order/StatusTimeline'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { formatDate } from '../../utils/formatDate'
 
+const downloadFile = async (fileUrl: string, fileName: string) => {
+  try {
+    const res = await fetch(fileUrl)
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  } catch {
+    alert('Failed to download file')
+  }
+}
+
 export default function OwnerOrderDetailPage() {
   const { orderId } = useParams()
   const queryClient = useQueryClient()
@@ -122,32 +139,56 @@ export default function OwnerOrderDetailPage() {
           <Card>
             <h3 className="font-label-md text-label-md text-on-surface-variant uppercase mb-3">Documents</h3>
             <div className="flex flex-col border border-outline-variant rounded-lg overflow-hidden">
-              {(order.documents || []).map((doc: any, i: number) => (
-                <div key={i} className={`flex items-center justify-between p-stack-md ${
+              {(order.documents || []).map((doc: any, i: number) => {
+                const isPdf = doc.fileName?.toLowerCase().endsWith('.pdf') || doc.fileUrl?.includes('.pdf')
+                const previewUrl = isPdf && doc.fileUrl?.includes('res.cloudinary.com')
+                  ? doc.fileUrl.replace('/image/upload/', '/image/upload/w_400/').replace('.pdf', '.jpg')
+                  : null
+                return (
+                <div key={i} className={`p-stack-md ${
                   i < (order.documents || []).length - 1 ? 'border-b border-outline-variant' : ''
                 } ${i % 2 === 0 ? 'bg-surface-bright' : 'bg-surface-container-lowest'}`}>
-                  <div className="flex items-center gap-stack-md">
-                    <div className="w-10 h-10 rounded flex items-center justify-center shrink-0 bg-primary-fixed">
-                      <span className="material-symbols-outlined text-primary">description</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-stack-md">
+                      <div className="w-10 h-10 rounded flex items-center justify-center shrink-0 bg-primary-fixed">
+                        <span className="material-symbols-outlined text-primary">description</span>
+                      </div>
+                      <div>
+                        <p className="font-body-md text-body-md font-semibold text-on-surface">{doc.fileName}</p>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant">
+                          {doc.copies} copy(ies) &middot; {doc.printType} &middot; {doc.sideType} &middot; {doc.paperSize}
+                          {doc.binding !== 'NONE' && ` &middot; ${doc.binding}`}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-body-md text-body-md font-semibold text-on-surface">{doc.fileName}</p>
-                      <p className="font-body-sm text-body-sm text-on-surface-variant">
-                        {doc.copies} copy(ies) &middot; {doc.printType} &middot; {doc.sideType} &middot; {doc.paperSize}
-                        {doc.binding !== 'NONE' && ` &middot; ${doc.binding}`}
-                      </p>
+                    <div className="text-right">
+                      <p className="font-body-md text-body-md font-bold text-on-surface">{formatCurrency(doc.subtotal)}</p>
+                      <div className="flex gap-2 mt-1 justify-end">
+                        {previewUrl && (
+                          <a href={previewUrl} target="_blank" rel="noopener noreferrer"
+                            className="btn-outline text-xs px-3 py-1 rounded">
+                            Preview
+                          </a>
+                        )}
+                        {doc.fileUrl && (
+                          <button onClick={() => downloadFile(doc.fileUrl, doc.fileName)}
+                            className="btn-primary text-xs px-3 py-1 rounded">
+                            Download
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-body-md text-body-md font-bold text-on-surface">{formatCurrency(doc.subtotal)}</p>
-                    {doc.fileUrl && (
-                      <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="font-label-md text-label-md text-primary hover:underline">
-                        Download
-                      </a>
-                    )}
-                  </div>
+                  {previewUrl && (
+                    <a href={previewUrl} target="_blank" rel="noopener noreferrer" className="block mt-2">
+                      <img src={previewUrl} alt={doc.fileName}
+                        className="max-h-48 w-full object-contain rounded border border-outline-variant bg-white cursor-pointer hover:opacity-80" />
+                      <p className="font-body-sm text-body-sm text-primary mt-1 text-center">Click to view full document</p>
+                    </a>
+                  )}
                 </div>
-              ))}
+                )
+              })}
             </div>
             <div className="flex justify-between items-center pt-stack-md mt-stack-md border-t border-outline-variant">
               <span className="font-body-lg text-body-lg font-bold text-on-surface">Total</span>

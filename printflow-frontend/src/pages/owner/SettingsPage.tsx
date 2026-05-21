@@ -1,33 +1,70 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Card from '../../components/ui/Card'
 import Spinner from '../../components/ui/Spinner'
+import ErrorState from '../../components/ui/ErrorState'
 import api from '../../services/api'
+import { getMyShop } from '../../services/shop.service'
+
+interface PriceConfigData {
+  bwPerPageA4: number
+  colorPerPageA4: number
+  a3Multiplier: number
+  doubleSideDiscount: number
+  spiralBindingFlat: number
+  stapleFlat: number
+  laminationPerPage: number
+  urgencyHighFee: number
+  urgencyCriticalFee: number
+}
 
 export default function SettingsPage() {
-  const [prices, setPrices] = useState({
-    bwPerPageA4: 0.50,
-    colorPerPageA4: 5.00,
-    a3Multiplier: 2.0,
-    doubleSideDiscount: 0,
-    spiralBindingFlat: 30,
-    stapleFlat: 5,
-    laminationPerPage: 10,
-    urgencyHighFee: 20,
-    urgencyCriticalFee: 50,
-    lockTimerMins: 5,
-  })
+  const [shopId, setShopId] = useState<string | null>(null)
+  const [prices, setPrices] = useState<PriceConfigData | null>(null)
+  const [lockTimerMins, setLockTimerMins] = useState(5)
+  const [upiId, setUpiId] = useState('')
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
 
-  const handleChange = (field: string, value: number) => {
-    setPrices((prev) => ({ ...prev, [field]: value }))
+  useEffect(() => {
+    (async () => {
+      try {
+        const shop: any = await getMyShop()
+        setShopId(shop.id)
+        setLockTimerMins(shop.lockTimerMins ?? 5)
+        setUpiId(shop.upiId ?? '')
+        const { data: priceRes } = await api.get(`/shops/${shop.id}/prices`)
+        setPrices({
+          bwPerPageA4: priceRes.data.bwPerPageA4,
+          colorPerPageA4: priceRes.data.colorPerPageA4,
+          a3Multiplier: priceRes.data.a3Multiplier,
+          doubleSideDiscount: priceRes.data.doubleSideDiscount,
+          spiralBindingFlat: priceRes.data.spiralBindingFlat,
+          stapleFlat: priceRes.data.stapleFlat,
+          laminationPerPage: priceRes.data.laminationPerPage,
+          urgencyHighFee: priceRes.data.urgencyHighFee,
+          urgencyCriticalFee: priceRes.data.urgencyCriticalFee,
+        })
+      } catch {
+        setError('Failed to load settings')
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [])
+
+  const handleChange = (field: keyof PriceConfigData, value: number) => {
+    if (!prices) return
+    setPrices({ ...prices, [field]: value })
   }
 
   const handleSave = async () => {
+    if (!shopId || !prices) return
     setSaving(true)
     setMessage('')
     try {
-      await api.patch('/shops/00000000-0000-0000-0000-000000000000/prices', {
+      await api.patch(`/shops/${shopId}/prices`, {
         bwPerPageA4: prices.bwPerPageA4,
         colorPerPageA4: prices.colorPerPageA4,
         a3Multiplier: prices.a3Multiplier,
@@ -38,9 +75,7 @@ export default function SettingsPage() {
         urgencyHighFee: prices.urgencyHighFee,
         urgencyCriticalFee: prices.urgencyCriticalFee,
       })
-      await api.patch('/shops/00000000-0000-0000-0000-000000000000/settings', {
-        lockTimerMins: prices.lockTimerMins,
-      })
+      await api.patch(`/shops/${shopId}/settings`, { lockTimerMins })
       setMessage('Settings saved successfully')
     } catch {
       setMessage('Failed to save settings')
@@ -48,6 +83,10 @@ export default function SettingsPage() {
       setSaving(false)
     }
   }
+
+  if (loading) return <Spinner size="lg" className="mt-20" />
+  if (error) return <ErrorState message={error} onRetry={() => window.location.reload()} />
+  if (!prices) return <ErrorState message="Price config not found" onRetry={() => window.location.reload()} />
 
   return (
     <div className="max-w-2xl mx-auto space-y-stack-lg">
@@ -122,9 +161,9 @@ export default function SettingsPage() {
       <Card>
         <h3 className="font-label-md text-label-md text-on-surface-variant uppercase mb-4">Order Rules</h3>
         <div>
-          <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Copy Change Lock Timer ({prices.lockTimerMins} minutes)</label>
-          <input type="range" min="2" max="30" value={prices.lockTimerMins}
-            onChange={(e) => handleChange('lockTimerMins', parseInt(e.target.value))}
+          <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Copy Change Lock Timer ({lockTimerMins} minutes)</label>
+          <input type="range" min="2" max="30" value={lockTimerMins}
+            onChange={(e) => setLockTimerMins(parseInt(e.target.value))}
             className="w-full accent-primary" />
           <div className="flex justify-between font-label-md text-label-md text-on-surface-variant mt-1">
             <span>2 min</span>

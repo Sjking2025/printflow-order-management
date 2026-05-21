@@ -2,6 +2,31 @@ import { create } from 'zustand'
 import { User } from '../types/user.types'
 import { verifyFirebaseToken } from '../services/auth.service'
 
+const STORAGE_KEY = 'printflow_auth'
+
+function loadFromStorage(): { user: User | null; accessToken: string | null } {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return { user: parsed.user ?? null, accessToken: parsed.accessToken ?? null }
+    }
+  } catch { /* ignore */ }
+  return { user: null, accessToken: null }
+}
+
+function saveToStorage(user: User | null, accessToken: string | null) {
+  try {
+    if (user && accessToken) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, accessToken }))
+    } else {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  } catch { /* ignore */ }
+}
+
+const { user: savedUser, accessToken: savedToken } = loadFromStorage()
+
 interface AuthState {
   user: User | null
   accessToken: string | null
@@ -13,15 +38,16 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  accessToken: null,
+  user: savedUser,
+  accessToken: savedToken,
   isLoading: false,
-  isAuthenticated: false,
+  isAuthenticated: !!savedUser && !!savedToken,
 
   login: async (firebaseToken: string, role?: string) => {
     set({ isLoading: true })
     try {
       const authResponse = await verifyFirebaseToken(firebaseToken, role)
+      saveToStorage(authResponse.user, authResponse.accessToken)
       set({
         user: authResponse.user,
         accessToken: authResponse.accessToken,
@@ -35,6 +61,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
+    saveToStorage(null, null)
     set({
       user: null,
       accessToken: null,
@@ -42,5 +69,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     })
   },
 
-  setUser: (user: User) => set({ user }),
+  setUser: (user: User) => {
+    const { accessToken } = useAuthStore.getState()
+    saveToStorage(user, accessToken)
+    set({ user })
+  },
 }))

@@ -9,6 +9,7 @@ import com.printflow.orders.mapper.OrderMapper;
 import com.printflow.queue.service.QueueService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +27,7 @@ public class QueueController {
     }
 
     @GetMapping("/queue")
+    @Transactional
     public ResponseEntity<ApiResponse<List<OrderSummaryResponse>>> getQueue(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(defaultValue = "PENDING,ACCEPTED,IN_PROGRESS,DELAYED,WAITING_CLARIFICATION")
