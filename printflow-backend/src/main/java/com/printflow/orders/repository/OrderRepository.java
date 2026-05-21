@@ -49,7 +49,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     long countCompletedSince(@Param("shopId") UUID shopId, @Param("since") java.time.OffsetDateTime since);
 
     @Query("SELECT o.customerId, COUNT(o), MAX(o.createdAt) FROM Order o " +
-           "WHERE o.shopId = :shopId AND o.deletedAt IS NULL " +
+           "WHERE o.shopId = :shopId " +
            "GROUP BY o.customerId")
     List<Object[]> findCustomerOrderStats(@Param("shopId") UUID shopId);
 }
