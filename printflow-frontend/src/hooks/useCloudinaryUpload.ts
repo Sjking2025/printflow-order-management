@@ -17,7 +17,7 @@ export const useCloudinaryUpload = () => {
     error: null,
   })
 
-  const upload = useCallback(async (file: File) => {
+  const upload = useCallback(async (file: File, onProgress?: (progress: number) => void) => {
     setState({ progress: 0, status: 'signing', fileUrl: null, error: null })
 
     try {
@@ -38,6 +38,7 @@ export const useCloudinaryUpload = () => {
         CLOUDINARY_CLOUD_NAME || signed.cloudName,
         (progress) => {
           setState((s) => ({ ...s, progress }))
+          onProgress?.(progress)
         }
       )
 

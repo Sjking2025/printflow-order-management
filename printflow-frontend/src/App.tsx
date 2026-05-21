@@ -11,6 +11,8 @@ import SettingsPage from './pages/owner/SettingsPage'
 import ClosurePage from './pages/owner/ClosurePage'
 import NotFoundPage from './pages/NotFoundPage'
 import Header from './components/layout/Header'
+import OwnerSidebar from './components/layout/OwnerSidebar'
+import MobileBottomNav from './components/layout/MobileBottomNav'
 import { ReactNode } from 'react'
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
@@ -25,12 +27,28 @@ const OwnerRoute = ({ children }: { children: ReactNode }) => {
   return <>{children}</>
 }
 
-const AppLayout = () => (
-  <div className="min-h-screen bg-gray-50">
+const CustomerLayout = () => (
+  <div className="flex flex-col min-h-screen bg-background">
     <Header />
-    <main className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+    <main className="flex-1 w-full max-w-container-max-width mx-auto px-margin-mobile md:px-margin-desktop py-stack-lg pb-[100px] md:pb-stack-lg">
       <Outlet />
     </main>
+    <MobileBottomNav />
+  </div>
+)
+
+const OwnerLayout = () => (
+  <div className="flex h-screen overflow-hidden bg-background">
+    <OwnerSidebar />
+    <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <Header />
+      <main className="flex-1 overflow-y-auto p-margin-mobile md:p-margin-desktop pb-[100px] md:pb-0">
+        <div className="max-w-container-max-width mx-auto space-y-stack-lg">
+          <Outlet />
+        </div>
+      </main>
+      <MobileBottomNav />
+    </div>
   </div>
 )
 
@@ -40,18 +58,18 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 
-        <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+        <Route element={<ProtectedRoute><CustomerLayout /></ProtectedRoute>}>
           <Route path="/orders" element={<OrderListPage />} />
           <Route path="/orders/new" element={<NewOrderPage />} />
           <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+        </Route>
 
-          <Route element={<OwnerRoute><Outlet /></OwnerRoute>}>
-            <Route path="/owner/dashboard" element={<DashboardPage />} />
-            <Route path="/owner/queue" element={<QueuePage />} />
-            <Route path="/owner/orders/:orderId" element={<OwnerOrderDetailPage />} />
-            <Route path="/owner/settings" element={<SettingsPage />} />
-            <Route path="/owner/closure" element={<ClosurePage />} />
-          </Route>
+        <Route element={<ProtectedRoute><OwnerRoute><OwnerLayout /></OwnerRoute></ProtectedRoute>}>
+          <Route path="/owner/dashboard" element={<DashboardPage />} />
+          <Route path="/owner/queue" element={<QueuePage />} />
+          <Route path="/owner/orders/:orderId" element={<OwnerOrderDetailPage />} />
+          <Route path="/owner/settings" element={<SettingsPage />} />
+          <Route path="/owner/closure" element={<ClosurePage />} />
         </Route>
 
         <Route path="/" element={<Navigate to="/orders" replace />} />

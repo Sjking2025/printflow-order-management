@@ -49,101 +49,99 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-xl font-bold text-gray-900">Shop Settings</h1>
+    <div className="max-w-2xl mx-auto space-y-stack-lg">
+      <div>
+        <h2 className="font-headline-lg text-headline-lg text-primary">Shop Settings</h2>
+        <p className="font-body-md text-body-md text-on-surface-variant mt-1">Manage pricing and order configuration.</p>
+      </div>
 
       <Card>
-        <h3 className="font-semibold text-sm mb-4">Basic Prices</h3>
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-500">B&W per page (A4)</label>
-              <input type="number" step="0.50" min="0" value={prices.bwPerPageA4}
-                onChange={(e) => handleChange('bwPerPageA4', parseFloat(e.target.value) || 0)}
-                className="input-field mt-1" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">Color per page (A4)</label>
-              <input type="number" step="0.50" min="0" value={prices.colorPerPageA4}
-                onChange={(e) => handleChange('colorPerPageA4', parseFloat(e.target.value) || 0)}
-                className="input-field mt-1" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">A3 Multiplier (×)</label>
-              <input type="number" step="0.5" min="1" value={prices.a3Multiplier}
-                onChange={(e) => handleChange('a3Multiplier', parseFloat(e.target.value) || 1)}
-                className="input-field mt-1" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500">Double Side Discount (per page)</label>
-              <input type="number" step="0.10" min="0" value={prices.doubleSideDiscount}
-                onChange={(e) => handleChange('doubleSideDiscount', parseFloat(e.target.value) || 0)}
-                className="input-field mt-1" />
-            </div>
+        <h3 className="font-label-md text-label-md text-on-surface-variant uppercase mb-4">Basic Prices</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">B&W per page (A4)</label>
+            <input type="number" step="0.50" min="0" value={prices.bwPerPageA4}
+              onChange={(e) => handleChange('bwPerPageA4', parseFloat(e.target.value) || 0)} className="input-field" />
+          </div>
+          <div>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Color per page (A4)</label>
+            <input type="number" step="0.50" min="0" value={prices.colorPerPageA4}
+              onChange={(e) => handleChange('colorPerPageA4', parseFloat(e.target.value) || 0)} className="input-field" />
+          </div>
+          <div>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">A3 Multiplier (×)</label>
+            <input type="number" step="0.5" min="1" value={prices.a3Multiplier}
+              onChange={(e) => handleChange('a3Multiplier', parseFloat(e.target.value) || 1)} className="input-field" />
+          </div>
+          <div>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Double Side Discount (per page)</label>
+            <input type="number" step="0.10" min="0" value={prices.doubleSideDiscount}
+              onChange={(e) => handleChange('doubleSideDiscount', parseFloat(e.target.value) || 0)} className="input-field" />
           </div>
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-sm mb-4">Add-on Prices</h3>
+        <h3 className="font-label-md text-label-md text-on-surface-variant uppercase mb-4">Add-on Prices</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-gray-500">Spiral Binding (flat)</label>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Spiral Binding (flat)</label>
             <input type="number" step="5" min="0" value={prices.spiralBindingFlat}
-              onChange={(e) => handleChange('spiralBindingFlat', parseFloat(e.target.value) || 0)}
-              className="input-field mt-1" />
+              onChange={(e) => handleChange('spiralBindingFlat', parseFloat(e.target.value) || 0)} className="input-field" />
           </div>
           <div>
-            <label className="text-xs text-gray-500">Staple (flat)</label>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Staple (flat)</label>
             <input type="number" step="1" min="0" value={prices.stapleFlat}
-              onChange={(e) => handleChange('stapleFlat', parseFloat(e.target.value) || 0)}
-              className="input-field mt-1" />
+              onChange={(e) => handleChange('stapleFlat', parseFloat(e.target.value) || 0)} className="input-field" />
           </div>
           <div>
-            <label className="text-xs text-gray-500">Lamination (per page)</label>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Lamination (per page)</label>
             <input type="number" step="1" min="0" value={prices.laminationPerPage}
-              onChange={(e) => handleChange('laminationPerPage', parseFloat(e.target.value) || 0)}
-              className="input-field mt-1" />
+              onChange={(e) => handleChange('laminationPerPage', parseFloat(e.target.value) || 0)} className="input-field" />
           </div>
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-sm mb-4">Urgency Fees</h3>
+        <h3 className="font-label-md text-label-md text-on-surface-variant uppercase mb-4">Urgency Fees</h3>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-gray-500">High Urgency Fee</label>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">High Urgency Fee</label>
             <input type="number" step="5" min="0" value={prices.urgencyHighFee}
-              onChange={(e) => handleChange('urgencyHighFee', parseFloat(e.target.value) || 0)}
-              className="input-field mt-1" />
+              onChange={(e) => handleChange('urgencyHighFee', parseFloat(e.target.value) || 0)} className="input-field" />
           </div>
           <div>
-            <label className="text-xs text-gray-500">Critical Urgency Fee</label>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Critical Urgency Fee</label>
             <input type="number" step="10" min="0" value={prices.urgencyCriticalFee}
-              onChange={(e) => handleChange('urgencyCriticalFee', parseFloat(e.target.value) || 0)}
-              className="input-field mt-1" />
+              onChange={(e) => handleChange('urgencyCriticalFee', parseFloat(e.target.value) || 0)} className="input-field" />
           </div>
         </div>
       </Card>
 
       <Card>
-        <h3 className="font-semibold text-sm mb-4">Order Rules</h3>
+        <h3 className="font-label-md text-label-md text-on-surface-variant uppercase mb-4">Order Rules</h3>
         <div>
-          <label className="text-xs text-gray-500">Copy Change Lock Timer (2–30 minutes)</label>
+          <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Copy Change Lock Timer ({prices.lockTimerMins} minutes)</label>
           <input type="range" min="2" max="30" value={prices.lockTimerMins}
             onChange={(e) => handleChange('lockTimerMins', parseInt(e.target.value))}
-            className="w-full mt-2" />
-          <p className="text-xs text-gray-500 text-center mt-1">{prices.lockTimerMins} minutes</p>
+            className="w-full accent-primary" />
+          <div className="flex justify-between font-label-md text-label-md text-on-surface-variant mt-1">
+            <span>2 min</span>
+            <span>30 min</span>
+          </div>
         </div>
       </Card>
 
       {message && (
-        <div className={`p-3 rounded-lg text-sm ${message.includes('success') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+        <div className={`p-stack-md rounded-lg font-body-sm text-body-sm ${
+          message.includes('success') ? 'bg-status-success text-on-status-success' : 'bg-error-container text-on-error-container'
+        }`}>
           {message}
         </div>
       )}
 
-      <button onClick={handleSave} disabled={saving} className="w-full btn-primary">
+      <button onClick={handleSave} disabled={saving} className="btn-primary w-full">
+        {saving ? <Spinner size="sm" /> : null}
         {saving ? 'Saving...' : 'Save Settings'}
       </button>
     </div>

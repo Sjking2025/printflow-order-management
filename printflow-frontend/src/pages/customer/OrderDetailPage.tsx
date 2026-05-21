@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useOrderDetail, useUpdateCopies } from '../../hooks/useOrders'
 import OrderStatusBadge from '../../components/order/OrderStatusBadge'
-import UrgencyBadge from '../../components/order/UrgencyBadge'
 import StatusTimeline from '../../components/order/StatusTimeline'
 import CountdownTimer from '../../components/order/CountdownTimer'
 import Card from '../../components/ui/Card'
@@ -41,88 +40,127 @@ export default function OrderDetailPage() {
   const canModifyCopies = !order.processingStartedAt || isLockActive
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-stack-lg">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-stack-sm">
         <div>
-          <h1 className="text-xl font-bold">{order.orderNumber}</h1>
-          <div className="flex items-center gap-2 mt-1">
-            <OrderStatusBadge status={order.status} />
-            <UrgencyBadge urgency={order.urgency} />
-          </div>
+          <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-stack-xs">
+            Order #{order.orderNumber}
+          </h1>
+          <p className="font-body-sm text-body-sm text-on-surface-variant">
+            Placed on {formatDate(order.createdAt)}
+          </p>
+        </div>
+        <OrderStatusBadge status={order.status} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+        <div className="col-span-1 md:col-span-8">
+          <Card>
+            <h2 className="font-headline-md text-headline-md text-primary mb-stack-lg">Production Timeline</h2>
+            <StatusTimeline currentStatus={order.status} />
+          </Card>
+        </div>
+
+        <div className="col-span-1 md:col-span-4">
+          <Card className="flex flex-col justify-between h-full">
+            {order.lockExpiresAt && order.status === 'ACCEPTED' && (
+              <div>
+                <div className="flex justify-between items-center mb-stack-sm">
+                  <h3 className="font-label-md text-label-md text-on-surface-variant uppercase">Modification Window</h3>
+                  <span className="material-symbols-outlined text-outline">timer</span>
+                </div>
+                <div className="bg-surface-container-low p-stack-md rounded-lg text-center mb-stack-md border border-outline-variant/50">
+                  <p className="font-display text-display text-primary tracking-tight">
+                    <CountdownTimer expiresAt={order.lockExpiresAt} />
+                  </p>
+                  <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">remaining to edit quantities</p>
+                </div>
+              </div>
+            )}
+            <div className="flex flex-col gap-stack-sm">
+              <button className="btn-outline w-full">
+                <span className="material-symbols-outlined text-[18px]">edit</span>
+                Edit Quantities
+              </button>
+              <button className="btn-primary w-full">
+                <span className="material-symbols-outlined text-[18px]">chat_bubble</span>
+                Request Clarification
+              </button>
+            </div>
+          </Card>
+        </div>
+
+        <div className="col-span-1 md:col-span-7">
+          <Card>
+            <h3 className="font-headline-md text-headline-md text-primary mb-stack-md">Document Configuration</h3>
+            <div className="flex flex-col border border-outline-variant rounded-lg overflow-hidden">
+              {order.documents?.map((doc: any, idx: number) => (
+                <div
+                  key={doc.id}
+                  className={`flex items-center justify-between p-stack-md ${
+                    idx < order.documents.length - 1 ? 'border-b border-outline-variant' : ''
+                  } ${idx % 2 === 0 ? 'bg-surface-bright' : 'bg-surface-container-lowest'}`}
+                >
+                  <div className="flex items-center gap-stack-md">
+                    <div className="w-10 h-10 rounded flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: idx % 2 === 0 ? '#d5e3ff' : '#e0e3e5' }}
+                    >
+                      <span className="material-symbols-outlined" style={{ color: idx % 2 === 0 ? '#a7c8ff' : '#737780' }}>
+                        {doc.fileName?.endsWith('.png') || doc.fileName?.endsWith('.jpg') ? 'image' : 'description'}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-body-md text-body-md font-semibold text-on-surface">{doc.fileName}</p>
+                      <p className="font-body-sm text-body-sm text-on-surface-variant">
+                        {doc.paperSize} &middot; {doc.printType === 'COLOR' ? 'Color' : 'B&W'} &middot; {doc.sideType === 'DOUBLE' ? 'Double-sided' : 'Single-sided'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-label-md text-label-md text-on-surface">{doc.copies} Copies</p>
+                    <p className="font-body-sm text-body-sm font-medium text-on-surface">{formatCurrency(doc.subtotal)}</p>
+                    {canModifyCopies && order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
+                      <button
+                        onClick={() => { setEditDocId(doc.id); setNewCopies(doc.copies); setCopyError('') }}
+                        className="font-label-md text-label-md text-primary hover:underline mt-1"
+                      >
+                        Change copies
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        <div className="col-span-1 md:col-span-5">
+          <Card className="flex flex-col h-full">
+            <h3 className="font-headline-md text-headline-md text-primary mb-stack-md">Digital Receipt</h3>
+            <div className="bg-surface-container-low p-stack-md rounded border border-outline-variant/50 mb-stack-md font-code-sm text-code-sm text-on-surface">
+              <div className="flex justify-between mb-2"><span>Subtotal:</span><span>{formatCurrency(order.totalAmount)}</span></div>
+              <div className="flex justify-between mb-2"><span>Status:</span><span>{order.paymentStatus?.replace('_', ' ') || 'Pending'}</span></div>
+              {order.delayReason && (
+                <div className="border-t border-outline-variant/50 my-2 pt-2">
+                  <p className="text-error font-semibold">Delay: {order.delayReason}</p>
+                  {order.delayUntil && <p className="text-on-surface-variant">Expected by: {formatDate(order.delayUntil)}</p>}
+                </div>
+              )}
+            </div>
+            <div className="mt-auto">
+              <h4 className="font-label-md text-label-md text-on-surface-variant uppercase mb-stack-xs">Pickup Instructions</h4>
+              <p className="font-body-sm text-body-sm text-on-surface bg-surface-bright p-stack-sm rounded border border-outline-variant">
+                Present this order number at the Front Desk. Please ensure you have a valid ID if requested by the shop owner.
+              </p>
+            </div>
+          </Card>
         </div>
       </div>
 
-      <Card>
-        <StatusTimeline currentStatus={order.status} />
-      </Card>
-
-      {order.lockExpiresAt && order.status === 'ACCEPTED' && (
-        <Card className="bg-amber-50 border-amber-200">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-amber-800">
-              {isLockActive ? 'You can modify copies for:' : 'Copy count is locked'}
-            </span>
-            <CountdownTimer expiresAt={order.lockExpiresAt} />
-          </div>
-        </Card>
-      )}
-
-      <Card>
-        <h3 className="font-semibold text-sm mb-3">Documents</h3>
-        <div className="space-y-3">
-          {order.documents?.map((doc: any) => (
-            <div key={doc.id} className="border rounded-lg p-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-sm font-medium">{doc.fileName}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {doc.copies} copy(ies) · {doc.printType} · {doc.sideType} · {doc.paperSize}
-                    {doc.binding !== 'NONE' && ` · ${doc.binding}`}
-                    {doc.lamination !== 'NONE' && ` · ${doc.lamination}`}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{formatCurrency(doc.subtotal)}</p>
-                  {canModifyCopies && order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
-                    <button
-                      onClick={() => { setEditDocId(doc.id); setNewCopies(doc.copies); setCopyError('') }}
-                      className="text-xs text-brand-blue hover:underline mt-1"
-                    >
-                      Change copies
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-between items-center pt-3 mt-3 border-t">
-          <span className="font-semibold">Total</span>
-          <span className="text-lg font-bold text-brand-blue">{formatCurrency(order.totalAmount)}</span>
-        </div>
-      </Card>
-
-      <Card>
-        <h3 className="font-semibold text-sm mb-2">Payment Status</h3>
-        <span className={`badge ${order.paymentStatus === 'VERIFIED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-          {order.paymentStatus?.replace('_', ' ') || 'Pending'}
-        </span>
-      </Card>
-
-      {order.delayReason && (
-        <Card className="bg-red-50 border-red-200">
-          <h3 className="font-semibold text-sm text-red-800">Delay Notice</h3>
-          <p className="text-sm text-red-700 mt-1">{order.delayReason}</p>
-          {order.delayUntil && (
-            <p className="text-xs text-red-600 mt-1">Expected by: {formatDate(order.delayUntil)}</p>
-          )}
-        </Card>
-      )}
-
       <Modal isOpen={!!editDocId} onClose={() => setEditDocId(null)} title="Change Copy Count">
-        <div className="space-y-4">
+        <div className="space-y-stack-md">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Number of copies</label>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Number of copies</label>
             <input
               type="number"
               min={1}
@@ -132,11 +170,11 @@ export default function OrderDetailPage() {
               className="input-field"
             />
           </div>
-          {copyError && <p className="text-sm text-red-600">{copyError}</p>}
-          <div className="flex gap-3">
+          {copyError && <p className="font-body-sm text-body-sm text-error">{copyError}</p>}
+          <div className="flex gap-stack-md">
             <button onClick={() => setEditDocId(null)} className="btn-ghost flex-1">Cancel</button>
             <button onClick={handleUpdateCopies} disabled={updateCopies.isPending} className="btn-primary flex-1">
-              {updateCopies.isPending ? 'Updating...' : 'Update'}
+              {updateCopies.isPending ? <Spinner size="sm" /> : 'Update'}
             </button>
           </div>
         </div>
