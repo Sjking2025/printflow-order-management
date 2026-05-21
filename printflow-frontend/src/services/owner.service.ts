@@ -30,3 +30,16 @@ export const setClosureMode = async (mode: string, message?: string, until?: str
   const { data } = await api.post('/owner/closure', { mode, message, until })
   return data.data
 }
+
+export interface ShopCustomerInfo {
+  customerId: string
+  customerName: string
+  customerEmail: string | null
+  orderCount: number
+  latestOrderDate: string
+}
+
+export const getShopCustomers = async () => {
+  const { data } = await api.get<ApiResponse<ShopCustomerInfo[]>>('/owner/customers')
+  return data.data
+}

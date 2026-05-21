@@ -13,5 +13,7 @@ public record OrderSummaryResponse(
     BigDecimal totalAmount,
     String paymentStatus,
     OffsetDateTime expectedDelivery,
-    OffsetDateTime createdAt
+    OffsetDateTime createdAt,
+    UUID customerId,
+    String customerName
 ) {}

@@ -66,4 +66,6 @@ export interface OrderSummary {
   paymentStatus: string
   expectedDelivery: string
   createdAt: string
+  customerId?: string
+  customerName?: string
 }

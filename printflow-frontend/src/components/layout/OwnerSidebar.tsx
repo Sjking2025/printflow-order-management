@@ -1,10 +1,10 @@
 import { Link, useLocation } from 'react-router-dom'
 
 const navItems = [
-  { label: 'Queue', icon: 'list_alt', path: '/owner/queue' },
   { label: 'Dashboard', icon: 'monitoring', path: '/owner/dashboard' },
-  { label: 'Active Jobs', icon: 'print', path: '/owner/active' },
-  { label: 'Completed', icon: 'check_circle', path: '/owner/completed' },
+  { label: 'Queue', icon: 'list_alt', path: '/owner/queue' },
+  { label: 'Customers', icon: 'group', path: '/owner/customers' },
+  { label: 'Closure', icon: 'power_settings_new', path: '/owner/closure' },
   { label: 'Settings', icon: 'settings', path: '/owner/settings' },
 ]
 

@@ -9,6 +9,7 @@ import DashboardPage from './pages/owner/DashboardPage'
 import OwnerOnboardingPage from './pages/owner/OwnerOnboardingPage'
 import QueuePage from './pages/owner/QueuePage'
 import OwnerOrderDetailPage from './pages/owner/OwnerOrderDetailPage'
+import CustomersPage from './pages/owner/CustomersPage'
 import SettingsPage from './pages/owner/SettingsPage'
 import ClosurePage from './pages/owner/ClosurePage'
 import NotFoundPage from './pages/NotFoundPage'
@@ -89,6 +90,7 @@ export default function App() {
         <Route element={<ProtectedRoute><OwnerRoute><OwnerGuard><OwnerLayout /></OwnerGuard></OwnerRoute></ProtectedRoute>}>
           <Route path="/owner/dashboard" element={<DashboardPage />} />
           <Route path="/owner/queue" element={<QueuePage />} />
+          <Route path="/owner/customers" element={<CustomersPage />} />
           <Route path="/owner/orders/:orderId" element={<OwnerOrderDetailPage />} />
           <Route path="/owner/settings" element={<SettingsPage />} />
           <Route path="/owner/closure" element={<ClosurePage />} />
