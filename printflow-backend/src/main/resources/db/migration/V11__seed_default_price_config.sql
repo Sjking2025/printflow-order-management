@@ -1,0 +1,3 @@
+-- This migration is intentionally empty for fresh databases.
+-- The default price config is seeded programmatically when a shop is created.
+-- For existing shops, prices default to the column defaults defined in V3.

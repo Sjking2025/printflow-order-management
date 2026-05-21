@@ -1,0 +1,37 @@
+# --- Sensitive credentials ---
+.env
+.env.local
+.env.*
+printflow-v2-firebase-adminsdk-*.json
+
+# --- Documentation & design assets (not code) ---
+PrintFlow_Master Documents/
+stitch_printflow_*/
+
+# --- Dependencies ---
+**/node_modules/
+**/.pnp
+**/.pnp.js
+
+# --- Build outputs ---
+**/target/
+**/dist/
+**/build/
+
+# --- IDE & OS files ---
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+npm-debug.log*
+
+# --- Env example (keep, but safe) ---
+printflow-backend/.env
+printflow-frontend/.env.local
