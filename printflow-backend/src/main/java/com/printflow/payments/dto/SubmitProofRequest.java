@@ -15,5 +15,7 @@ public record SubmitProofRequest(
     @NotNull(message = "Amount is required")
     BigDecimal amount,
 
+    String transactionId,
+
     String notes
 ) {}

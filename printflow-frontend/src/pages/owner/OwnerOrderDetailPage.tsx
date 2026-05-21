@@ -10,6 +10,7 @@ import Spinner from '../../components/ui/Spinner'
 import ErrorState from '../../components/ui/ErrorState'
 import Modal from '../../components/ui/Modal'
 import ClarificationDrawer from '../../components/clarifications/ClarificationDrawer'
+import StatusTimeline from '../../components/order/StatusTimeline'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { formatDate } from '../../utils/formatDate'
 
@@ -111,6 +112,11 @@ export default function OwnerOrderDetailPage() {
                 )}
               </div>
             </div>
+          </Card>
+
+          <Card>
+            <h3 className="font-label-md text-label-md text-on-surface-variant uppercase mb-3">Order Timeline</h3>
+            <StatusTimeline currentStatus={order.status} />
           </Card>
 
           <Card>

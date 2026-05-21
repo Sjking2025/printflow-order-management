@@ -10,7 +10,9 @@ import { usePriceCalculator } from '../../hooks/usePriceCalculator'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { MAX_DOCUMENTS } from '../../config/constants'
 import { getAllShops, ShopPublicInfo, PriceConfig } from '../../services/shop.service'
+import { submitPaymentProof } from '../../services/payments.service'
 import Spinner from '../../components/ui/Spinner'
+import { QRCodeSVG } from 'qrcode.react'
 
 const defaultDocConfig = {
   printType: 'BW' as const,
@@ -33,6 +35,7 @@ export default function NewOrderPage() {
   const [description, setDescription] = useState('')
   const [paymentProofUrl, setPaymentProofUrl] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('GPAY')
+  const [utr, setUtr] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [completedOrder, setCompletedOrder] = useState<{ orderId: string; orderNumber: string } | null>(null)
   const [shops, setShops] = useState<ShopPublicInfo[]>([])
@@ -142,6 +145,14 @@ export default function NewOrderPage() {
         })),
       })
 
+      if (paymentProofUrl && paymentMethod !== 'CASH') {
+        try {
+          await submitPaymentProof(result.orderId, paymentProofUrl, paymentMethod, total, utr)
+        } catch {
+          // Payment proof submission failed silently; user can retry from order page
+        }
+      }
+
       setCompletedOrder({ orderId: result.orderId, orderNumber: result.orderNumber })
     } catch {
       alert('Failed to place order. Please try again.')
@@ -154,7 +165,10 @@ export default function NewOrderPage() {
     if (step === 0) return !!shop
     if (step === 1) return files.length > 0 && files.every((f) => f.uploadStatus === 'done')
     if (step === 2) return files.every((f) => f.pageCount > 0 && f.copies > 0)
-    if (step === 3) return !!paymentProofUrl
+    if (step === 3) {
+      if (paymentMethod === 'CASH') return true
+      return !!paymentProofUrl && !!utr
+    }
     return false
   }
 
@@ -425,29 +439,39 @@ export default function NewOrderPage() {
             <>
               <div>
                 <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-1">Payment</h1>
-                <p className="text-on-surface-variant font-body-md text-body-md">Select payment method and upload proof.</p>
+                <p className="text-on-surface-variant font-body-md text-body-md">Select payment method, scan to pay, and upload proof.</p>
               </div>
 
               <div className="space-y-stack-md">
-                <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
-                  <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">UPI (Instant Payment)</h2>
-                  {shopLoading ? (
-                    <Spinner size="sm" />
-                  ) : shop ? (
-                    <div className="flex flex-col items-center gap-stack-md p-stack-md bg-surface rounded-lg border border-outline-variant">
-                      {shop.qrCodeUrl && (
-                        <img src={shop.qrCodeUrl} alt="Pay via UPI QR" className="w-40 h-40 object-contain" />
-                      )}
-                      {shop.upiId && (
+                {paymentMethod !== 'CASH' && (
+                  <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
+                    <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Scan & Pay (UPI)</h2>
+                    {shopLoading ? (
+                      <Spinner size="sm" />
+                    ) : shop?.upiId ? (
+                      <div className="flex flex-col items-center gap-stack-md p-stack-md bg-surface rounded-lg border border-outline-variant">
+                        <div className="bg-white p-4 rounded-lg">
+                          <QRCodeSVG
+                            value={`upi://pay?pa=${shop.upiId}&am=${total}&tn=PrintFlow&cu=INR`}
+                            size={180}
+                            level="M"
+                            includeMargin
+                          />
+                        </div>
                         <div className="text-center">
                           <p className="font-label-md text-label-md text-on-surface-variant">UPI ID</p>
                           <p className="font-body-md text-body-md font-mono font-semibold text-primary">{shop.upiId}</p>
                         </div>
-                      )}
-                      <p className="font-body-sm text-body-sm text-on-surface-variant">Send exact amount and upload screenshot below</p>
-                    </div>
-                  ) : null}
-                </div>
+                        <div className="bg-surface-container-low p-stack-sm rounded-lg w-full text-center">
+                          <p className="font-body-sm text-body-sm text-on-surface-variant">Amount: <span className="font-bold text-primary font-headline-md text-headline-md">{formatCurrency(total)}</span></p>
+                          <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Send exact amount. Order ID will be in payment note.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="font-body-sm text-body-sm text-on-surface-variant text-center p-stack-md">UPI details not available for this shop.</p>
+                    )}
+                  </div>
+                )}
 
                 <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
                   <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Payment Method</h2>
@@ -478,10 +502,36 @@ export default function NewOrderPage() {
                   </div>
                 </div>
 
-                <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
-                  <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Payment Proof</h2>
-                  <PaymentProofUpload onUploadComplete={(url) => setPaymentProofUrl(url)} />
-                </div>
+                {paymentMethod !== 'CASH' && (
+                  <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
+                    <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Transaction Details</h2>
+                    <div className="space-y-stack-md">
+                      <div>
+                        <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">UPI Transaction ID (UTR)</label>
+                        <input
+                          type="text"
+                          value={utr}
+                          onChange={(e) => setUtr(e.target.value)}
+                          className="input-field"
+                          placeholder="e.g., 123456789012"
+                          maxLength={50}
+                        />
+                        <p className="font-label-md text-label-md text-on-surface-variant mt-1">Enter the 12-digit UTR from your payment app after scanning the QR.</p>
+                      </div>
+                      <div>
+                        <h3 className="font-body-sm text-body-sm font-semibold text-on-surface block mb-2">Payment Screenshot (Optional but recommended)</h3>
+                        <PaymentProofUpload onUploadComplete={(url) => setPaymentProofUrl(url)} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {paymentMethod === 'CASH' && (
+                  <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
+                    <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Cash on Pickup</h2>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant">You can pay with cash when you collect your order at the shop.</p>
+                  </div>
+                )}
               </div>
             </>
           )}
