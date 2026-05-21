@@ -167,6 +167,8 @@ public class ShopService {
                 shop.getAddress(),
                 shop.getPhone(),
                 shop.getWhatsapp(),
+                shop.getUpiId(),
+                shop.getQrCodeUrl(),
                 shop.getIsOpen(),
                 shop.getClosureMsg(),
                 config

@@ -10,6 +10,8 @@ public record ShopPublicResponse(
     String address,
     String phone,
     String whatsapp,
+    String upiId,
+    String qrCodeUrl,
     Boolean isOpen,
     String closureMsg,
     PriceConfig priceConfig
