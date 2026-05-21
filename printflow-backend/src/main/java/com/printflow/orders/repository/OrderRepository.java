@@ -42,4 +42,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
            "WHERE o.shopId = :shopId AND o.status = 'COMPLETED' " +
            "AND o.updatedAt >= :since")
     double revenueSince(@Param("shopId") UUID shopId, @Param("since") java.time.OffsetDateTime since);
+
+    @Query("SELECT COUNT(o) FROM Order o " +
+           "WHERE o.shopId = :shopId AND o.status = 'COMPLETED' " +
+           "AND o.updatedAt >= :since")
+    long countCompletedSince(@Param("shopId") UUID shopId, @Param("since") java.time.OffsetDateTime since);
 }

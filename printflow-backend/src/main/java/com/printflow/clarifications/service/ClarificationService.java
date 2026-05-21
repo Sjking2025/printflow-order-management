@@ -4,9 +4,12 @@ import com.printflow.clarifications.dto.ClarificationResponse;
 import com.printflow.clarifications.dto.SendMessageRequest;
 import com.printflow.clarifications.entity.ClarificationThread;
 import com.printflow.clarifications.repository.ClarificationRepository;
+import com.printflow.orders.dto.UpdateStatusRequest;
 import com.printflow.orders.entity.Order;
 import com.printflow.orders.repository.OrderRepository;
+import com.printflow.orders.service.OrderStatusService;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,11 +22,14 @@ public class ClarificationService {
 
     private final ClarificationRepository clarificationRepository;
     private final OrderRepository orderRepository;
+    private final OrderStatusService orderStatusService;
 
     public ClarificationService(ClarificationRepository clarificationRepository,
-                                OrderRepository orderRepository) {
+                                OrderRepository orderRepository,
+                                @Lazy OrderStatusService orderStatusService) {
         this.clarificationRepository = clarificationRepository;
         this.orderRepository = orderRepository;
+        this.orderStatusService = orderStatusService;
     }
 
     @Transactional
@@ -32,9 +38,17 @@ public class ClarificationService {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new EntityNotFoundException("Order not found"));
 
+        // When an owner initiates a clarification, transition through the FSM properly
+        // so that: (1) the transition is validated, (2) history is recorded.
+        // Previously this was a direct setStatus() call bypassing both FSM and audit trail.
         if ("OWNER".equals(senderRole) && !"WAITING_CLARIFICATION".equals(order.getStatus())) {
-            order.setStatus("WAITING_CLARIFICATION");
-            orderRepository.save(order);
+            UpdateStatusRequest statusRequest = new UpdateStatusRequest(
+                "WAITING_CLARIFICATION",
+                "Owner initiated clarification",  // note
+                null,                              // delayReason — not applicable
+                null                               // delayUntil  — not applicable
+            );
+            orderStatusService.updateStatus(orderId, statusRequest, senderId);
         }
 
         ClarificationThread message = ClarificationThread.builder()

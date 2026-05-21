@@ -8,7 +8,10 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.HexFormat;
 import java.util.UUID;
 
 @Service
@@ -28,6 +31,10 @@ public class JwtService {
         this.refreshExpiry = refreshExpiry;
     }
 
+    public long getRefreshExpirySeconds() {
+        return refreshExpiry;
+    }
+
     public String generateAccessToken(User user, UUID shopId) {
         Date now = new Date();
         return Jwts.builder()
@@ -41,8 +48,23 @@ public class JwtService {
             .compact();
     }
 
+    /** Generates a cryptographically random raw refresh token (UUID v4). */
     public String generateRefreshToken() {
         return UUID.randomUUID().toString();
+    }
+
+    /**
+     * SHA-256 hex digest of the raw token.
+     * Always hash before storing or comparing — never persist the raw value.
+     */
+    public String hashToken(String rawToken) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
     }
 
     public Claims validateToken(String token) {
@@ -64,5 +86,15 @@ public class JwtService {
 
     public String extractRole(String token) {
         return validateToken(token).get("role", String.class);
+    }
+
+    /**
+     * Extracts shopId from JWT claims.
+     * Returns null for CUSTOMER tokens (shopId claim is null).
+     * Used by JwtAuthFilter to avoid a DB round-trip per request.
+     */
+    public UUID extractShopId(String token) {
+        String shopIdStr = validateToken(token).get("shopId", String.class);
+        return shopIdStr != null ? UUID.fromString(shopIdStr) : null;
     }
 }

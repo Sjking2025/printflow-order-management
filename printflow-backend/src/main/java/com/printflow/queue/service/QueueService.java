@@ -46,9 +46,11 @@ public class QueueService {
         long delayed = orderRepository.countByShopIdAndStatus(shopId, "DELAYED");
 
         double revenue = orderRepository.revenueSince(shopId,
-            java.time.OffsetDateTime.now().withHour(0).withMinute(0).withSecond(0));
+            java.time.OffsetDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0));
 
-        long completedToday = orderRepository.countByShopIdAndStatus(shopId, "COMPLETED");
+        java.time.OffsetDateTime startOfDay =
+            java.time.OffsetDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
+        long completedToday = orderRepository.countCompletedSince(shopId, startOfDay);
 
         return new DashboardStats(pending, urgent, inProgress, completedToday, revenue, delayed);
     }
