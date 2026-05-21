@@ -44,7 +44,7 @@ public class AuthService {
     @Transactional
     public ResponseEntity<?> verifyAndIssueTokens(FirebaseTokenRequest request) {
         FirebaseToken firebaseToken = firebaseVerifier.verify(request.firebaseToken());
-        User user = userService.findOrCreate(firebaseToken);
+        User user = userService.findOrCreate(firebaseToken, request.role());
         UUID shopId = shopService.getShopIdByOwnerId(user.getId());
         String accessToken = jwtService.generateAccessToken(user, shopId);
 

@@ -13,7 +13,7 @@ export default function QueuePage() {
   if (isLoading) return <Spinner size="lg" className="mt-20" />
   if (isError) return <ErrorState message="Failed to load queue" onRetry={() => refetch()} />
 
-  const orders = data?.items || []
+  const orders = Array.isArray(data) ? data : (data as any)?.items || []
   const filtered = search
     ? orders.filter((o: any) =>
         o.orderNumber?.toLowerCase().includes(search.toLowerCase()) ||

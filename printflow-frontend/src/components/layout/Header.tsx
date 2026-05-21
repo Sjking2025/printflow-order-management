@@ -1,12 +1,21 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useAuthStore } from '../../store/auth.store'
 import { useAuth } from '../../hooks/useAuth'
+import { getUnreadCount } from '../../services/notifications.service'
 
 export default function Header() {
   const user = useAuthStore((s) => s.user)
   const { logout } = useAuth()
   const navigate = useNavigate()
   const isOwner = user?.role === 'OWNER'
+
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['unreadNotifications', user?.id],
+    queryFn: getUnreadCount,
+    enabled: !!user,
+    refetchInterval: 30000 // Poll every 30s
+  })
 
   const handleLogout = () => {
     logout()
@@ -41,16 +50,17 @@ export default function Header() {
         <div className="flex items-center gap-stack-md">
           {user ? (
             <>
-              <button className="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors">
+              <Link to="/notifications" className="relative text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors flex items-center justify-center">
                 <span className="material-symbols-outlined">notifications</span>
-              </button>
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-error text-[10px] font-bold text-white ring-2 ring-surface-container-lowest">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
               <span className="hidden sm:block font-body-sm text-body-sm text-on-surface-variant">{user.name}</span>
               <div className="h-8 w-8 rounded-full overflow-hidden border border-outline-variant bg-surface-variant flex items-center justify-center">
-                {user.picture ? (
-                  <img src={user.picture} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="material-symbols-outlined text-on-surface-variant text-lg">account_circle</span>
-                )}
+                <span className="material-symbols-outlined text-on-surface-variant text-lg">account_circle</span>
               </div>
               <button onClick={handleLogout} className="btn-ghost text-sm">
                 Logout

@@ -44,10 +44,12 @@ Commit: HEAD
 | Feature | Location | What's Missing |
 |---------|----------|----------------|
 | Refresh Token Rotation | `AuthService.refreshToken()` | Returns 401 "not implemented in MVP" — refresh token is issued but does nothing; users re-login after 1h |
-| WhatsApp Notifications via Twilio | `NotificationService.java:62-65` | Twilio SDK present, credentials configured, `shouldSendWhatsApp()` method exists, but `TwilioClient` API call is never made — only DB record saved |
-| SMS Notifications via Twilio | `NotificationService.java:67-70` | Same as WhatsApp — logic present, Twilio call absent |
 | Order Lock Timer Enforcement | `OrderStatusService.java:39-46` | `lockExpiresAt` is SET when order ACCEPTED, but nowhere in the codebase is this timestamp CHECKED or enforced to prevent race conditions |
-| Frontend Notifications UI | `NotificationController.java` exists, API works | No dedicated notifications page or badge in frontend (polling constants defined but UI unclear) |
+| WhatsApp & SMS Notifications | `NotificationService.java` | Twilio SDK present in `pom.xml`, but no integration exists to actually dispatch messages. |
+| Notification Pipeline Triggers | `OrderStatusService`, `OrderService` | Status changes and order creations do not trigger notifications. |
+| Clarification Notification Triggers | `ClarificationService.java` | Does not dispatch notifications when clarification is requested or replied to. |
+| Clarification Chat UI | `ClarificationDrawer.tsx` (Missing) | Frontend buttons are stubs; missing the sliding drawer chat UI from mockups. |
+| Frontend Notifications UI | `NotificationsPage.tsx` (Missing) | Missing dedicated notifications page and header unread badge. |
 
 ## 🔴 Broken / Stubbed
 
@@ -61,7 +63,6 @@ Commit: HEAD
 | Feature | Evidence | Risk |
 |---------|----------|------|
 | MapStruct | Declared in `pom.xml`; `OrderMapper.java` and `UserMapper.java` exist as classes | Mappers are hand-coded methods, not MapStruct `@Mapper` interfaces — the dependency is unused |
-| Twilio WhatsApp/SMS | Full SDK, env vars, methods — but no actual API calls | 10MB of dead dependencies; false confidence in multi-channel support |
 | Branch-specific owner pages (mobile) | Stitch designs exist for `owner_mobile_dashboard` | No dedicated mobile route or layout in frontend code |
 
 ## API Surface

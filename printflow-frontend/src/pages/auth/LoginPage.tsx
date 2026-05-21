@@ -26,7 +26,7 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     try {
-      await loginWithGoogle()
+      await loginWithGoogle(userType.toUpperCase())
       const u = useAuthStore.getState().user
       navigate(u?.role === 'OWNER' ? '/owner/dashboard' : '/orders')
     } catch (err: any) {
@@ -45,7 +45,7 @@ export default function LoginPage() {
     }
     setLoading(true)
     try {
-      await loginWithEmail(email, password)
+      await loginWithEmail(email, password, userType.toUpperCase())
       const u = useAuthStore.getState().user
       navigate(u?.role === 'OWNER' ? '/owner/dashboard' : '/orders')
     } catch (err: any) {

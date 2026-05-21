@@ -9,6 +9,7 @@ import Card from '../../components/ui/Card'
 import Spinner from '../../components/ui/Spinner'
 import ErrorState from '../../components/ui/ErrorState'
 import Modal from '../../components/ui/Modal'
+import ClarificationDrawer from '../../components/clarifications/ClarificationDrawer'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { formatDate } from '../../utils/formatDate'
 
@@ -270,24 +271,11 @@ export default function OwnerOrderDetailPage() {
         </div>
       </Modal>
 
-      <Modal isOpen={clarifyModal} onClose={() => setClarifyModal(false)} title="Request Clarification">
-        <div className="space-y-stack-md">
-          <div>
-            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Your question to customer</label>
-            <textarea value={clarifyMsg} onChange={(e) => setClarifyMsg(e.target.value)}
-              className="input-field" rows={3} placeholder="e.g., Should I use color for the cover page?" />
-          </div>
-          <div className="flex gap-stack-md">
-            <button onClick={() => setClarifyModal(false)} className="btn-ghost flex-1">Cancel</button>
-            <button
-              onClick={async () => {
-                await handleAction('WAITING_CLARIFICATION', { note: clarifyMsg })
-                setClarifyModal(false)
-              }}
-              disabled={!clarifyMsg} className="btn-primary flex-1">Send</button>
-          </div>
-        </div>
-      </Modal>
+      <ClarificationDrawer
+        isOpen={clarifyModal}
+        onClose={() => setClarifyModal(false)}
+        order={order}
+      />
     </div>
   )
 }

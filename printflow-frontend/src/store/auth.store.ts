@@ -7,7 +7,7 @@ interface AuthState {
   accessToken: string | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (firebaseToken: string) => Promise<void>
+  login: (firebaseToken: string, role?: string) => Promise<void>
   logout: () => void
   setUser: (user: User) => void
 }
@@ -18,10 +18,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: false,
   isAuthenticated: false,
 
-  login: async (firebaseToken: string) => {
+  login: async (firebaseToken: string, role?: string) => {
     set({ isLoading: true })
     try {
-      const authResponse = await verifyFirebaseToken(firebaseToken)
+      const authResponse = await verifyFirebaseToken(firebaseToken, role)
       set({
         user: authResponse.user,
         accessToken: authResponse.accessToken,

@@ -9,7 +9,7 @@ import PaymentProofUpload from '../../components/payment/PaymentProofUpload'
 import { usePriceCalculator } from '../../hooks/usePriceCalculator'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { MAX_DOCUMENTS } from '../../config/constants'
-import { getDefaultShop, ShopPublicInfo } from '../../services/shop.service'
+import { getAllShops, ShopPublicInfo, PriceConfig } from '../../services/shop.service'
 import Spinner from '../../components/ui/Spinner'
 
 const defaultDocConfig = {
@@ -23,7 +23,7 @@ const defaultDocConfig = {
   notes: '',
 }
 
-const STEPS = ['Upload', 'Configure', 'Payment']
+const STEPS = ['Select Shop', 'Upload', 'Configure', 'Payment']
 
 export default function NewOrderPage() {
   const [step, setStep] = useState(0)
@@ -35,6 +35,7 @@ export default function NewOrderPage() {
   const [paymentMethod, setPaymentMethod] = useState('GPAY')
   const [submitting, setSubmitting] = useState(false)
   const [completedOrder, setCompletedOrder] = useState<{ orderId: string; orderNumber: string } | null>(null)
+  const [shops, setShops] = useState<ShopPublicInfo[]>([])
   const [shop, setShop] = useState<ShopPublicInfo | null>(null)
   const [shopLoading, setShopLoading] = useState(true)
 
@@ -43,13 +44,13 @@ export default function NewOrderPage() {
   const { upload, ...uploadState } = useCloudinaryUpload()
 
   useEffect(() => {
-    getDefaultShop()
-      .then(setShop)
+    getAllShops()
+      .then(setShops)
       .catch(() => {})
       .finally(() => setShopLoading(false))
   }, [])
 
-  const priceConfig = {
+  const priceConfig = shop?.priceConfig || {
     bwPerPageA4: 0.50,
     colorPerPageA4: 5.00,
     a3Multiplier: 2.0,
@@ -61,7 +62,7 @@ export default function NewOrderPage() {
     urgencyCriticalFee: 50,
   }
 
-  const { documentPrices, documentsTotal, urgencyFee, total } = usePriceCalculator(files, urgency, priceConfig)
+  const { documentPrices, documentsTotal, urgencyFee, total } = usePriceCalculator(files, urgency, priceConfig as any)
 
   const handleFilesSelected = async (newFiles: File[]) => {
     const remaining = MAX_DOCUMENTS - files.length
@@ -150,9 +151,10 @@ export default function NewOrderPage() {
   }
 
   const canNextStep = () => {
-    if (step === 0) return files.length > 0 && files.every((f) => f.uploadStatus === 'done')
-    if (step === 1) return files.every((f) => f.pageCount > 0 && f.copies > 0)
-    if (step === 2) return !!paymentProofUrl
+    if (step === 0) return !!shop
+    if (step === 1) return files.length > 0 && files.every((f) => f.uploadStatus === 'done')
+    if (step === 2) return files.every((f) => f.pageCount > 0 && f.copies > 0)
+    if (step === 3) return !!paymentProofUrl
     return false
   }
 
@@ -205,6 +207,33 @@ export default function NewOrderPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
         <div className="lg:col-span-8 flex flex-col gap-stack-lg">
           {step === 0 && (
+            <>
+              <div>
+                <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-1">Select Print Shop</h1>
+                <p className="text-on-surface-variant font-body-md text-body-md">Choose a print shop to fulfill your order.</p>
+              </div>
+              {shopLoading ? <div className="py-10 text-center"><Spinner size="lg" /></div> : shops.length === 0 ? (
+                <div className="py-10 text-center text-on-surface-variant font-body-lg">No shops available right now.</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
+                  {shops.map((s) => (
+                    <div key={s.id} onClick={() => setShop(s)} className={`p-stack-md border rounded-xl cursor-pointer transition-colors ${shop?.id === s.id ? 'border-primary bg-primary-fixed/20 shadow-sm' : 'border-outline-variant hover:border-secondary bg-surface-container-lowest'}`}>
+                      <h3 className="font-headline-sm text-headline-sm text-primary mb-1">{s.name}</h3>
+                      <p className="font-body-sm text-body-sm text-on-surface-variant">Owner: {s.ownerName || 'Unknown'}</p>
+                      {s.priceConfig && (
+                        <div className="mt-3 inline-flex bg-surface-variant text-on-surface-variant text-xs rounded-full px-3 py-1 items-center gap-1">
+                          <span className="material-symbols-outlined text-[14px]">info</span>
+                          B&W A4: {formatCurrency(s.priceConfig.bwPerPageA4)} &middot; Color A4: {formatCurrency(s.priceConfig.colorPerPageA4)}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {step === 1 && (
             <>
               <div>
                 <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-1">Document Setup</h1>
@@ -343,7 +372,7 @@ export default function NewOrderPage() {
             </>
           )}
 
-          {step === 1 && (
+          {step === 2 && (
             <>
               <div>
                 <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-1">Order Details & Pricing</h1>
@@ -392,7 +421,7 @@ export default function NewOrderPage() {
             </>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <>
               <div>
                 <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-1">Payment</h1>
@@ -522,7 +551,7 @@ export default function NewOrderPage() {
                   <span className="font-headline-md text-headline-md text-primary">{formatCurrency(total)}</span>
                 </div>
               </div>
-              {step === 2 && (
+              {step === 3 && (
                 <div className="p-stack-md bg-surface-container-lowest border-t border-surface-variant flex flex-col gap-stack-sm">
                   <div className="flex items-center justify-center gap-2 p-2 bg-secondary-fixed/30 text-on-secondary-container rounded font-label-md text-label-md">
                     <span className="material-symbols-outlined text-[16px] animate-pulse">timer</span>

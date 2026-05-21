@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Card from '../../components/ui/Card'
+import Spinner from '../../components/ui/Spinner'
 import api from '../../services/api'
 
 export default function SettingsPage() {

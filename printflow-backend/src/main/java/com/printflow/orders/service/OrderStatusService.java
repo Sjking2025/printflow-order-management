@@ -19,15 +19,18 @@ public class OrderStatusService {
     private final OrderStatusHistoryRepository historyRepository;
     private final OrderStatusTransitions transitions;
     private final OrderService orderService;
+    private final com.printflow.notifications.service.NotificationService notificationService;
 
     public OrderStatusService(OrderRepository orderRepository,
                               OrderStatusHistoryRepository historyRepository,
                               OrderStatusTransitions transitions,
-                              OrderService orderService) {
+                              OrderService orderService,
+                              com.printflow.notifications.service.NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.historyRepository = historyRepository;
         this.transitions = transitions;
         this.orderService = orderService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -75,6 +78,9 @@ public class OrderStatusService {
 
         // Force-initialize documents collection within transaction to prevent lazy-load issues
         savedOrder.getDocuments().size();
+
+        // Notify customer of status change
+        notificationService.notifyOrderStatusChange(savedOrder, toStatus);
 
         return savedOrder;
     }

@@ -28,17 +28,20 @@ public class OrderService {
     private final OrderNumberGenerator orderNumberGenerator;
     private final PriceCalculationService priceCalculationService;
     private final ShopService shopService;
+    private final com.printflow.notifications.service.NotificationService notificationService;
 
     public OrderService(OrderRepository orderRepository,
                         OrderDocumentRepository documentRepository,
                         OrderNumberGenerator orderNumberGenerator,
                         PriceCalculationService priceCalculationService,
-                        ShopService shopService) {
+                        ShopService shopService,
+                        com.printflow.notifications.service.NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.documentRepository = documentRepository;
         this.orderNumberGenerator = orderNumberGenerator;
         this.priceCalculationService = priceCalculationService;
         this.shopService = shopService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -100,7 +103,9 @@ public class OrderService {
         BigDecimal total = priceCalculationService.calculateOrderTotal(documentsTotal, urgencyFee);
         order.setTotalAmount(total);
 
-        return orderRepository.save(order);
+        order = orderRepository.save(order);
+        notificationService.notifyNewOrderToOwner(order);
+        return order;
     }
 
     public Order getOrderForCustomer(UUID orderId, UUID customerId) {

@@ -8,9 +8,9 @@ import Card from '../../components/ui/Card'
 import Spinner from '../../components/ui/Spinner'
 import ErrorState from '../../components/ui/ErrorState'
 import Modal from '../../components/ui/Modal'
+import ClarificationDrawer from '../../components/clarifications/ClarificationDrawer'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { formatDate } from '../../utils/formatDate'
-
 export default function OrderDetailPage() {
   const { orderId } = useParams()
   const { data: order, isLoading, isError, refetch } = useOrderDetail(orderId)
@@ -18,6 +18,7 @@ export default function OrderDetailPage() {
   const [editDocId, setEditDocId] = useState<string | null>(null)
   const [newCopies, setNewCopies] = useState(1)
   const [copyError, setCopyError] = useState('')
+  const [clarifyDrawerOpen, setClarifyDrawerOpen] = useState(false)
 
   if (isLoading) return <Spinner size="lg" className="mt-20" />
   if (isError) return <ErrorState message="Failed to load order" onRetry={() => refetch()} />
@@ -82,7 +83,10 @@ export default function OrderDetailPage() {
                 <span className="material-symbols-outlined text-[18px]">edit</span>
                 Edit Quantities
               </button>
-              <button className="btn-primary w-full">
+              <button 
+                onClick={() => setClarifyDrawerOpen(true)}
+                className="btn-primary w-full"
+              >
                 <span className="material-symbols-outlined text-[18px]">chat_bubble</span>
                 Request Clarification
               </button>
@@ -140,10 +144,10 @@ export default function OrderDetailPage() {
             <div className="bg-surface-container-low p-stack-md rounded border border-outline-variant/50 mb-stack-md font-code-sm text-code-sm text-on-surface">
               <div className="flex justify-between mb-2"><span>Subtotal:</span><span>{formatCurrency(order.totalAmount)}</span></div>
               <div className="flex justify-between mb-2"><span>Status:</span><span>{order.paymentStatus?.replace('_', ' ') || 'Pending'}</span></div>
-              {order.delayReason && (
+              {(order as any).delayReason && (
                 <div className="border-t border-outline-variant/50 my-2 pt-2">
-                  <p className="text-error font-semibold">Delay: {order.delayReason}</p>
-                  {order.delayUntil && <p className="text-on-surface-variant">Expected by: {formatDate(order.delayUntil)}</p>}
+                  <p className="text-error font-semibold">Delay: {(order as any).delayReason}</p>
+                  {(order as any).delayUntil && <p className="text-on-surface-variant">Expected by: {formatDate((order as any).delayUntil)}</p>}
                 </div>
               )}
             </div>
@@ -179,6 +183,12 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </Modal>
+
+      <ClarificationDrawer
+        isOpen={clarifyDrawerOpen}
+        onClose={() => setClarifyDrawerOpen(false)}
+        order={order}
+      />
     </div>
   )
 }

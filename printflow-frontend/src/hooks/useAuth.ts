@@ -4,16 +4,16 @@ import { signInWithGoogle, signInWithEmail, auth } from '../config/firebase'
 export const useAuth = () => {
   const store = useAuthStore()
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (role?: string) => {
     const userCred = await signInWithGoogle()
     const token = await userCred.getIdToken()
-    await store.login(token)
+    await store.login(token, role)
   }
 
-  const loginWithEmail = async (email: string, password: string) => {
+  const loginWithEmail = async (email: string, password: string, role?: string) => {
     const userCred = await signInWithEmail(email, password)
     const token = await userCred.getIdToken()
-    await store.login(token)
+    await store.login(token, role)
   }
 
   const logout = () => {

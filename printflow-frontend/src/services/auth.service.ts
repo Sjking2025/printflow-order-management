@@ -2,9 +2,10 @@ import api from './api'
 import { ApiResponse } from '../types/api.types'
 import { AuthResponse } from '../types/user.types'
 
-export const verifyFirebaseToken = async (firebaseToken: string) => {
+export const verifyFirebaseToken = async (firebaseToken: string, role?: string) => {
   const { data } = await api.post<ApiResponse<AuthResponse>>('/auth/verify', {
     firebaseToken,
+    role,
   })
   return data.data
 }

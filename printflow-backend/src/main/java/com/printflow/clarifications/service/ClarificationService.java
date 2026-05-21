@@ -23,13 +23,16 @@ public class ClarificationService {
     private final ClarificationRepository clarificationRepository;
     private final OrderRepository orderRepository;
     private final OrderStatusService orderStatusService;
+    private final com.printflow.notifications.service.NotificationService notificationService;
 
     public ClarificationService(ClarificationRepository clarificationRepository,
                                 OrderRepository orderRepository,
-                                @Lazy OrderStatusService orderStatusService) {
+                                @Lazy OrderStatusService orderStatusService,
+                                com.printflow.notifications.service.NotificationService notificationService) {
         this.clarificationRepository = clarificationRepository;
         this.orderRepository = orderRepository;
         this.orderStatusService = orderStatusService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -58,7 +61,15 @@ public class ClarificationService {
             .message(request.message())
             .build();
 
-        return clarificationRepository.save(message);
+        ClarificationThread savedMessage = clarificationRepository.save(message);
+
+        if ("OWNER".equals(senderRole)) {
+            notificationService.notifyClarificationRequested(order, request.message());
+        } else if ("CUSTOMER".equals(senderRole)) {
+            notificationService.notifyClarificationReplied(order, request.message());
+        }
+
+        return savedMessage;
     }
 
     public List<ClarificationResponse> getThread(UUID orderId) {

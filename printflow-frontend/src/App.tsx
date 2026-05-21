@@ -4,7 +4,9 @@ import LoginPage from './pages/auth/LoginPage'
 import OrderListPage from './pages/customer/OrderListPage'
 import OrderDetailPage from './pages/customer/OrderDetailPage'
 import NewOrderPage from './pages/customer/NewOrderPage'
+import NotificationsPage from './pages/customer/NotificationsPage'
 import DashboardPage from './pages/owner/DashboardPage'
+import OwnerOnboardingPage from './pages/owner/OwnerOnboardingPage'
 import QueuePage from './pages/owner/QueuePage'
 import OwnerOrderDetailPage from './pages/owner/OwnerOrderDetailPage'
 import SettingsPage from './pages/owner/SettingsPage'
@@ -21,9 +23,26 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   return <>{children}</>
 }
 
+import { useQuery } from '@tanstack/react-query'
+import { getMyShop } from './services/shop.service'
+import Spinner from './components/ui/Spinner'
+
 const OwnerRoute = ({ children }: { children: ReactNode }) => {
   const user = useAuthStore((s) => s.user)
   if (!user || user.role !== 'OWNER') return <Navigate to="/orders" replace />
+  return <>{children}</>
+}
+
+const OwnerGuard = ({ children }: { children: ReactNode }) => {
+  const { data: shop, isLoading, isError } = useQuery({
+    queryKey: ['myShop'],
+    queryFn: getMyShop,
+    retry: false,
+  })
+
+  if (isLoading) return <div className="h-screen flex items-center justify-center"><Spinner size="lg" /></div>
+  if (isError || !shop) return <Navigate to="/owner/onboarding" replace />
+
   return <>{children}</>
 }
 
@@ -62,9 +81,12 @@ export default function App() {
           <Route path="/orders" element={<OrderListPage />} />
           <Route path="/orders/new" element={<NewOrderPage />} />
           <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
 
-        <Route element={<ProtectedRoute><OwnerRoute><OwnerLayout /></OwnerRoute></ProtectedRoute>}>
+        <Route path="/owner/onboarding" element={<ProtectedRoute><OwnerOnboardingPage /></ProtectedRoute>} />
+
+        <Route element={<ProtectedRoute><OwnerRoute><OwnerGuard><OwnerLayout /></OwnerGuard></OwnerRoute></ProtectedRoute>}>
           <Route path="/owner/dashboard" element={<DashboardPage />} />
           <Route path="/owner/queue" element={<QueuePage />} />
           <Route path="/owner/orders/:orderId" element={<OwnerOrderDetailPage />} />
