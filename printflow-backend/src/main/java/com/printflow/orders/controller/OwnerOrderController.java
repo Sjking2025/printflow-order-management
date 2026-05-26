@@ -106,6 +106,7 @@ public class OwnerOrderController {
         data.put("orderId", updated.getId());
         data.put("status", updated.getStatus());
         data.put("lockExpiresAt", updated.getLockExpiresAt());
+        data.put("copyModifyExpiresAt", updated.getCopyModifyExpiresAt());
         data.put("processingStartedAt", updated.getProcessingStartedAt());
         return ResponseEntity.ok(ApiResponse.success(data,
             "Status updated to " + request.status()));
