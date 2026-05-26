@@ -152,9 +152,12 @@ public class OrderController {
         if (paymentOpt.isPresent()) {
             Payment p = paymentOpt.get();
             payment = new OrderResponse.PaymentInfo(
-                p.getId(), p.getAmount(), p.getMethod(),
-                p.getStatus(), p.getProofUrl(),
-                p.getTransactionId(), p.getVerifiedAt()
+                p.getId(), p.getAmount(),
+                p.getGateway() != null ? p.getGateway().name() : null,
+                p.getStatus() != null ? p.getStatus().name() : null,
+                p.getProofUrl(), p.getTransactionId(),
+                p.getGatewayOrderId(), p.getGatewayPaymentId(),
+                p.getPaidAt(), p.getVerifiedAt()
             );
         }
 

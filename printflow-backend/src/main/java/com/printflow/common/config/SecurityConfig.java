@@ -30,6 +30,13 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/shops/public").permitAll()
                 .requestMatchers("/api/v1/shops/*/public").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+
+                // ── Razorpay webhook: public but HMAC-verified ──
+                // Razorpay cannot send JWT tokens.
+                // Security is enforced via X-Razorpay-Signature header
+                // verification in RazorpayWebhookController.
+                .requestMatchers("/api/v1/payments/webhook/razorpay").permitAll()
+
                 .requestMatchers("/api/v1/owner/**").hasRole("OWNER")
                 .anyRequest().authenticated()
             )

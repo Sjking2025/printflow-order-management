@@ -333,4 +333,90 @@ public class NotificationService {
         if (template == null) return null;
         return template.render(vars);
     }
+
+    /**
+     * Notifies the shop owner when an order is auto-accepted via Razorpay gateway payment.
+     * Sent asynchronously — failures are swallowed (notification is non-critical).
+     */
+    @Async("notificationExecutor")
+    public void notifyGatewayPaymentSuccessToOwner(Order order) {
+        try {
+            Shop shop = shopRepository.findById(order.getShopId())
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+            User owner = userRepository.findById(shop.getOwnerId())
+                .orElseThrow(() -> new EntityNotFoundException("Owner not found"));
+
+            String subject = String.format(
+                "Auto-accepted: Order %s — Payment received via Razorpay",
+                order.getOrderNumber());
+
+            String body = String.format("""
+                A new order has been automatically accepted after successful online payment.
+
+                Order: %s
+                Amount: ₹%s
+                Payment: Razorpay (online)
+
+                No action required — the order is now active in your queue.
+
+                — PrintFlow""",
+                order.getOrderNumber(),
+                order.getTotalAmount());
+
+            if (owner.getEmail() != null) {
+                emailService.send(owner.getEmail(), subject, body);
+                saveNotification(owner.getId(), order.getId(),
+                    "GATEWAY_PAYMENT_RECEIVED", "EMAIL", subject, body);
+            }
+
+            saveNotification(owner.getId(), order.getId(),
+                "GATEWAY_PAYMENT_RECEIVED", "IN_APP", subject, body);
+
+        } catch (Exception e) {
+            log.error("Failed to notify owner of gateway payment for order {}: {}",
+                order.getOrderNumber(), e.getMessage());
+        }
+    }
+
+    /**
+     * Notifies the customer that their Razorpay payment was confirmed and order accepted.
+     * Complements the existing ACCEPTED status notification with payment-specific context.
+     */
+    @Async("notificationExecutor")
+    public void notifyCustomerPaymentSuccess(Order order, String gatewayPaymentId) {
+        try {
+            User customer = userRepository.findById(order.getCustomerId()).orElseThrow();
+            Shop shop = shopRepository.findById(order.getShopId()).orElseThrow();
+
+            String subject = String.format("Payment confirmed — Order %s accepted", order.getOrderNumber());
+            String body = String.format("""
+                Hi %s,
+
+                Your payment has been received and your order is now confirmed!
+
+                Order: %s
+                Amount: ₹%s
+                Payment ID: %s
+                Shop: %s
+
+                We'll notify you when your order starts printing.
+
+                — PrintFlow""",
+                customer.getName(), order.getOrderNumber(),
+                order.getTotalAmount(), gatewayPaymentId, shop.getName());
+
+            if (customer.getEmail() != null) {
+                emailService.send(customer.getEmail(), subject, body);
+                saveNotification(customer.getId(), order.getId(),
+                    "PAYMENT_SUCCESS", "EMAIL", subject, body);
+            }
+
+            saveNotification(customer.getId(), order.getId(),
+                "PAYMENT_SUCCESS", "IN_APP", subject, body);
+
+        } catch (Exception e) {
+            log.error("Failed to send payment success notification for order {}: {}",
+                order.getOrderNumber(), e.getMessage());
+        }
+    }
 }

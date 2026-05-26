@@ -48,9 +48,12 @@ public class Order {
     @Column(name = "total_amount", precision = 10, scale = 2)
     private BigDecimal totalAmount;
 
-    @Column(name = "payment_status", nullable = false, length = 20)
+    @Column(name = "payment_status", nullable = false, length = 30)
     @Builder.Default
     private String paymentStatus = "PENDING";
+
+    @Column(name = "payment_method", length = 20)
+    private String paymentMethod;  // "MANUAL_UPI" or "RAZORPAY"
 
     @Column(name = "delay_reason", columnDefinition = "TEXT")
     private String delayReason;

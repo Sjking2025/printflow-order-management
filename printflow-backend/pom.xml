@@ -24,6 +24,7 @@
         <firebase-admin.version>9.3.0</firebase-admin.version>
         <cloudinary.version>1.38.0</cloudinary.version>
         <twilio.version>10.4.1</twilio.version>
+        <razorpay.version>1.4.4</razorpay.version>
     </properties>
 
     <dependencies>
@@ -120,6 +121,12 @@
             <groupId>com.twilio.sdk</groupId>
             <artifactId>twilio</artifactId>
             <version>${twilio.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.razorpay</groupId>
+            <artifactId>razorpay-java</artifactId>
+            <version>${razorpay.version}</version>
         </dependency>
 
         <dependency>

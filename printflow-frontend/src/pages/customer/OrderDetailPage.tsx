@@ -1,6 +1,10 @@
 import { useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { useOrderDetail, useUpdateCopies } from '../../hooks/useOrders'
+import { useGatewayPayment } from '../../hooks/useGatewayPayment'
+import { PaymentMethodSelector } from '../../components/payment/PaymentMethodSelector'
+import { RazorpayCheckoutButton } from '../../components/payment/RazorpayCheckoutButton'
+import PaymentProofUpload from '../../components/payment/PaymentProofUpload'
 import OrderStatusBadge from '../../components/order/OrderStatusBadge'
 import StatusTimeline from '../../components/order/StatusTimeline'
 import CountdownTimer from '../../components/order/CountdownTimer'
@@ -11,6 +15,8 @@ import Modal from '../../components/ui/Modal'
 import ClarificationDrawer from '../../components/clarifications/ClarificationDrawer'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { formatDate } from '../../utils/formatDate'
+import type { PaymentMethod } from '../../types/order.types'
+
 export default function OrderDetailPage() {
   const { orderId } = useParams()
   const { data: order, isLoading, isError, refetch } = useOrderDetail(orderId)
@@ -19,7 +25,16 @@ export default function OrderDetailPage() {
   const [newCopies, setNewCopies] = useState(1)
   const [copyError, setCopyError] = useState('')
   const [clarifyDrawerOpen, setClarifyDrawerOpen] = useState(false)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null)
   const docsRef = useRef<HTMLDivElement>(null)
+
+  // Gateway payment hook — manages Razorpay checkout state machine
+  const gatewayPayment = useGatewayPayment({
+    orderId: orderId ?? '',
+    orderNumber: order?.orderNumber,
+    amount: order?.totalAmount,
+    onSuccess: () => refetch(),
+  })
 
   if (isLoading) return <Spinner size="lg" className="mt-20" />
   if (isError) return <ErrorState message="Failed to load order" onRetry={() => refetch()} />
@@ -196,6 +211,151 @@ export default function OrderDetailPage() {
           </Card>
         </div>
       </div>
+
+      {/* ── Payment Section ──────────────────────────────────────────────── */}
+      {/* Show when order awaits payment (PENDING or GATEWAY_INITIATED) */}
+      {(order.paymentStatus === 'PENDING' || order.paymentStatus === 'GATEWAY_INITIATED') &&
+        order.status !== 'CANCELLED' && (
+        <div id="payment-section">
+        <Card>
+          <h3 className="font-headline-md text-headline-md text-primary mb-stack-md">
+            Complete Payment
+          </h3>
+          <p className="font-body-sm text-body-sm text-on-surface-variant mb-stack-lg">
+            Your order total is{' '}
+            <span className="font-semibold text-on-surface">{formatCurrency(order.totalAmount)}</span>
+          </p>
+
+          {/* Step 1: Choose payment method — only when order is truly PENDING and not in gateway flow */}
+          {order.paymentStatus === 'PENDING' &&
+            !gatewayPayment.isSuccess &&
+            gatewayPayment.state === 'idle' &&
+            !selectedPaymentMethod && (
+            <PaymentMethodSelector
+              selected={selectedPaymentMethod}
+              onChange={setSelectedPaymentMethod}
+              disabled={false}
+            />
+          )}
+
+          {/* Step 2a: Razorpay online checkout */}
+          {(selectedPaymentMethod === 'RAZORPAY' || order.paymentStatus === 'GATEWAY_INITIATED') &&
+            !gatewayPayment.isSuccess && (
+            <div className="mt-stack-lg">
+              {selectedPaymentMethod === 'RAZORPAY' && order.paymentStatus === 'PENDING' && (
+                <button
+                  onClick={() => { setSelectedPaymentMethod(null); gatewayPayment.reset() }}
+                  className="btn-ghost mb-stack-md"
+                  style={{ fontSize: '14px' }}
+                  disabled={gatewayPayment.isLoading || gatewayPayment.state === 'checkout_open'}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
+                  Change method
+                </button>
+              )}
+              <RazorpayCheckoutButton
+                state={gatewayPayment.state}
+                error={gatewayPayment.error}
+                onClick={gatewayPayment.initiatePayment}
+                onReset={gatewayPayment.reset}
+                amount={order.totalAmount}
+              />
+            </div>
+          )}
+
+          {/* Step 2b: Manual UPI screenshot upload */}
+          {selectedPaymentMethod === 'MANUAL_UPI' && order.paymentStatus === 'PENDING' && (
+            <div className="mt-stack-lg">
+              <button
+                onClick={() => setSelectedPaymentMethod(null)}
+                className="btn-ghost mb-stack-md"
+                style={{ fontSize: '14px' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>arrow_back</span>
+                Change method
+              </button>
+              <PaymentProofUpload onUploadComplete={async (url: string) => {
+                try {
+                  const { submitPaymentProof } = await import('../../services/payments.service')
+                  await submitPaymentProof(orderId!, url, 'UPI', order.totalAmount)
+                  refetch()
+                } catch (err) {
+                  console.error('Failed to submit payment proof:', err)
+                }
+              }} />
+            </div>
+          )}
+
+          {/* Gateway payment in progress — waiting for modal dismiss or verify */}
+          {gatewayPayment.isSuccess && (
+            <div className="flex items-center gap-stack-md p-stack-md rounded-xl"
+              style={{ backgroundColor: 'var(--color-tertiary-container)' }}>
+              <span className="material-symbols-outlined" style={{ color: 'var(--color-tertiary)', fontSize: '32px' }}>
+                check_circle
+              </span>
+              <div>
+                <p className="font-title-md text-on-surface font-semibold">Payment confirmed!</p>
+                <p className="font-body-sm text-on-surface-variant">
+                  Your order is now accepted and in the queue.
+                </p>
+              </div>
+            </div>
+          )}
+        </Card>
+        </div>
+      )}
+
+      {/* ── Already Paid (Razorpay) or Verified (Manual UPI) ─────────────── */}
+      {(order.paymentStatus === 'PAID' || order.paymentStatus === 'VERIFIED') && (
+        <Card>
+          <div className="flex items-center gap-stack-md">
+            <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: 'var(--color-tertiary-container)' }}>
+              <span className="material-symbols-outlined"
+                style={{ color: 'var(--color-tertiary)', fontSize: '24px' }}>
+                verified
+              </span>
+            </div>
+            <div className="flex-1">
+              <p className="font-title-md text-on-surface font-semibold">
+                {order.paymentStatus === 'PAID' ? 'Payment Received' : 'Payment Verified by Owner'}
+              </p>
+              <p className="font-body-sm text-on-surface-variant">
+                {order.payment?.gatewayPaymentId
+                  ? `Razorpay ID: ${order.payment.gatewayPaymentId}`
+                  : order.payment?.transactionId
+                    ? `UTR: ${order.payment.transactionId}`
+                    : formatCurrency(order.totalAmount)}
+              </p>
+            </div>
+            <span className="font-headline-md text-tertiary font-semibold">
+              {formatCurrency(order.totalAmount)}
+            </span>
+          </div>
+          {order.payment?.paidAt && (
+            <p className="font-body-sm text-on-surface-variant mt-stack-sm" style={{ paddingLeft: '64px' }}>
+              Paid on {formatDate(order.payment.paidAt)}
+            </p>
+          )}
+        </Card>
+      )}
+
+      {/* ── Proof Uploaded (awaiting owner review) ───────────────────────── */}
+      {order.paymentStatus === 'PROOF_UPLOADED' && (
+        <Card>
+          <div className="flex items-center gap-stack-md">
+            <span className="material-symbols-outlined text-primary" style={{ fontSize: '32px' }}>
+              hourglass_top
+            </span>
+            <div>
+              <p className="font-title-md text-on-surface font-semibold">Proof submitted</p>
+              <p className="font-body-sm text-on-surface-variant">
+                Waiting for the shop owner to review your payment screenshot.
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Modal isOpen={!!editDocId} onClose={() => setEditDocId(null)} title="Increase Copy Count">
         <div className="space-y-stack-md">

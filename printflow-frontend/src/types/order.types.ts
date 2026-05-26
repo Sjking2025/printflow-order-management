@@ -21,6 +21,35 @@ export interface UploadedFile extends OrderDocument {
   errorMessage?: string
 }
 
+// ── Payment types ─────────────────────────────────────────────
+
+export type PaymentMethod = 'MANUAL_UPI' | 'RAZORPAY'
+
+export type PaymentStatus =
+  | 'PENDING'
+  | 'PROOF_UPLOADED'
+  | 'VERIFIED'
+  | 'REJECTED'
+  | 'GATEWAY_INITIATED'
+  | 'PAID'
+  | 'FAILED'
+  | 'REFUNDED'
+
+export interface OrderPayment {
+  id: string
+  amount: number
+  gateway?: PaymentMethod        // NEW — MANUAL_UPI or RAZORPAY
+  status: PaymentStatus          // was 'string' — now typed
+  proofUrl?: string
+  transactionId?: string
+  gatewayOrderId?: string        // NEW — Razorpay order_xxx
+  gatewayPaymentId?: string      // NEW — Razorpay pay_xxx
+  paidAt?: string                // NEW — when payment was captured
+  verifiedAt?: string
+}
+
+// ── Order types ───────────────────────────────────────────────
+
 export interface Order {
   id: string
   orderNumber: string
@@ -29,21 +58,14 @@ export interface Order {
   expectedDelivery?: string
   description?: string
   totalAmount: number
-  paymentStatus: string
+  paymentStatus: PaymentStatus   // was 'string' — now typed
+  paymentMethod?: PaymentMethod  // NEW — which method was selected
   lockExpiresAt?: string
   copyModifyExpiresAt?: string
   processingStartedAt?: string
-  customer?: { id: string; name: string; phone?: string }
+  customer?: { id: string; name: string; phone?: string; email?: string }
   documents: OrderDocument[]
-  payment?: {
-    id: string
-    amount: number
-    method: string
-    status: string
-    proofUrl?: string
-    transactionId?: string
-    verifiedAt?: string
-  }
+  payment?: OrderPayment         // Updated type
   statusHistory?: {
     fromStatus: string
     toStatus: string
@@ -66,7 +88,8 @@ export interface OrderSummary {
   urgency: string
   documentCount: number
   totalAmount: number
-  paymentStatus: string
+  paymentStatus: PaymentStatus
+  paymentMethod?: PaymentMethod  // NEW
   expectedDelivery: string
   createdAt: string
   customerId?: string

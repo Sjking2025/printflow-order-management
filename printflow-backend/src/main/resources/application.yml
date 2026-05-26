@@ -58,6 +58,11 @@ app:
     whatsapp-from: ${TWILIO_WHATSAPP_FROM}
     sms-from: ${TWILIO_SMS_FROM}
   base-url: ${APP_BASE_URL:http://localhost:5173}
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID}
+    key-secret: ${RAZORPAY_KEY_SECRET}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+    currency: INR
 
 management:
   endpoints:

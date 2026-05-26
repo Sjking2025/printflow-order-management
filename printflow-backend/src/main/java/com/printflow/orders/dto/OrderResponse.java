@@ -35,9 +35,11 @@ public record OrderResponse(
                                    String lamination, String notes,
                                    BigDecimal subtotal,
                                    OffsetDateTime copiesModifiedAt) {}
-    public record PaymentInfo(UUID id, BigDecimal amount, String method,
+    public record PaymentInfo(UUID id, BigDecimal amount, String gateway,
                               String status, String proofUrl,
-                              String transactionId, OffsetDateTime verifiedAt) {}
+                              String transactionId, String gatewayOrderId,
+                              String gatewayPaymentId, OffsetDateTime paidAt,
+                              OffsetDateTime verifiedAt) {}
     public record StatusHistoryEntry(String fromStatus, String toStatus,
                                      String changedBy, String note,
                                      OffsetDateTime createdAt) {}

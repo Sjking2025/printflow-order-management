@@ -2,6 +2,9 @@ package com.printflow.common.exception;
 
 import com.printflow.orders.exception.InvalidStatusTransitionException;
 import com.printflow.orders.exception.OrderLockExpiredException;
+import com.printflow.payments.exception.GatewayOrderCreationException;
+import com.printflow.payments.exception.InvalidPaymentSignatureException;
+import com.printflow.payments.exception.PaymentAlreadyCompletedException;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +59,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException ex) {
         return buildError(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage());
+    }
+
+    @ExceptionHandler(PaymentAlreadyCompletedException.class)
+    public ResponseEntity<Map<String, Object>> handlePaymentAlreadyCompleted(
+            PaymentAlreadyCompletedException ex) {
+        return buildError(HttpStatus.CONFLICT, "PAYMENT_ALREADY_COMPLETED", ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidPaymentSignatureException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidSignature(
+            InvalidPaymentSignatureException ex) {
+        return buildError(HttpStatus.BAD_REQUEST, "INVALID_PAYMENT_SIGNATURE", ex.getMessage());
+    }
+
+    @ExceptionHandler(GatewayOrderCreationException.class)
+    public ResponseEntity<Map<String, Object>> handleGatewayError(
+            GatewayOrderCreationException ex) {
+        log.error("Gateway order creation failed", ex);
+        return buildError(HttpStatus.BAD_GATEWAY, "GATEWAY_ERROR",
+            "Payment gateway unavailable. Please try again.");
     }
 
     @ExceptionHandler(Exception.class)
