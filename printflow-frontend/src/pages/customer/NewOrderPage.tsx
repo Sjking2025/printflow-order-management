@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { useCreateOrder } from '../../hooks/useOrders'
 import { useCloudinaryUpload } from '../../hooks/useCloudinaryUpload'
 import { UploadedFile } from '../../types/order.types'
+import type { PaymentMethod } from '../../types/order.types'
 import FileUploadZone from '../../components/upload/FileUploadZone'
 import UploadProgress from '../../components/upload/UploadProgress'
 import PaymentProofUpload from '../../components/payment/PaymentProofUpload'
+import { PaymentMethodSelector } from '../../components/payment/PaymentMethodSelector'
 import { usePriceCalculator } from '../../hooks/usePriceCalculator'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { MAX_DOCUMENTS } from '../../config/constants'
@@ -34,7 +36,8 @@ export default function NewOrderPage() {
   const [expectedDelivery, setExpectedDelivery] = useState('')
   const [description, setDescription] = useState('')
   const [paymentProofUrl, setPaymentProofUrl] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState('GPAY')
+  const [paymentMode, setPaymentMode] = useState<PaymentMethod | null>(null)
+  const [manualUpiApp, setManualUpiApp] = useState('GPAY')
   const [utr, setUtr] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [completedOrder, setCompletedOrder] = useState<{ orderId: string; orderNumber: string } | null>(null)
@@ -145,12 +148,18 @@ export default function NewOrderPage() {
         })),
       })
 
-      if (paymentProofUrl && paymentMethod !== 'CASH') {
+      if (paymentMode === 'MANUAL_UPI' && paymentProofUrl) {
         try {
-          await submitPaymentProof(result.orderId, paymentProofUrl, paymentMethod, total, utr)
+          await submitPaymentProof(result.orderId, paymentProofUrl, manualUpiApp, total, utr)
         } catch {
           // Payment proof submission failed silently; user can retry from order page
         }
+      }
+
+      // If Razorpay was selected, redirect straight to order detail to complete checkout
+      if (paymentMode === 'RAZORPAY') {
+        navigate(`/orders/${result.orderId}`)
+        return
       }
 
       setCompletedOrder({ orderId: result.orderId, orderNumber: result.orderNumber })
@@ -166,8 +175,11 @@ export default function NewOrderPage() {
     if (step === 1) return files.length > 0 && files.every((f) => f.uploadStatus === 'done')
     if (step === 2) return files.every((f) => f.pageCount > 0 && f.copies > 0)
     if (step === 3) {
-      if (paymentMethod === 'CASH') return true
-      return !!paymentProofUrl && !!utr
+      if (!paymentMode) return false
+      // Razorpay: always allowed — order is placed, then checkout happens on order page
+      if (paymentMode === 'RAZORPAY') return true
+      // Manual UPI: require proof + UTR
+      if (paymentMode === 'MANUAL_UPI') return !!paymentProofUrl && !!utr
     }
     return false
   }
@@ -439,98 +451,120 @@ export default function NewOrderPage() {
             <>
               <div>
                 <h1 className="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-primary mb-1">Payment</h1>
-                <p className="text-on-surface-variant font-body-md text-body-md">Select payment method, scan to pay, and upload proof.</p>
+                <p className="text-on-surface-variant font-body-md text-body-md">Choose how you'd like to pay for your order.</p>
               </div>
 
               <div className="space-y-stack-md">
-                {paymentMethod !== 'CASH' && (
-                  <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
-                    <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Scan & Pay (UPI)</h2>
-                    {shopLoading ? (
-                      <Spinner size="sm" />
-                    ) : shop?.upiId ? (
-                      <div className="flex flex-col items-center gap-stack-md p-stack-md bg-surface rounded-lg border border-outline-variant">
-                        <div className="bg-white p-4 rounded-lg">
-                          <QRCodeSVG
-                            value={`upi://pay?pa=${shop.upiId}&am=${total}&tn=PrintFlow&cu=INR`}
-                            size={180}
-                            level="M"
-                            includeMargin
-                          />
-                        </div>
-                        <div className="text-center">
-                          <p className="font-label-md text-label-md text-on-surface-variant">UPI ID</p>
-                          <p className="font-body-md text-body-md font-mono font-semibold text-primary">{shop.upiId}</p>
-                        </div>
-                        <div className="bg-surface-container-low p-stack-sm rounded-lg w-full text-center">
-                          <p className="font-body-sm text-body-sm text-on-surface-variant">Amount: <span className="font-bold text-primary font-headline-md text-headline-md">{formatCurrency(total)}</span></p>
-                          <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Send exact amount. Order ID will be in payment note.</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="font-body-sm text-body-sm text-on-surface-variant text-center p-stack-md">UPI details not available for this shop.</p>
-                    )}
-                  </div>
-                )}
+                {/* ── Step 1: Choose payment mode ──────────────────── */}
+                <PaymentMethodSelector
+                  selected={paymentMode}
+                  onChange={(m) => { setPaymentMode(m); }}
+                  disabled={submitting}
+                />
 
-                <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
-                  <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Payment Method</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-stack-md">
-                    {[
-                      { value: 'GPAY', icon: 'account_balance_wallet', label: 'Google Pay', desc: 'Pay via any UPI App' },
-                      { value: 'PHONEPE', icon: 'smartphone', label: 'PhonePe', desc: 'Fast & Secure' },
-                      { value: 'PAYTM', icon: 'payments', label: 'Paytm', desc: 'Instant Transfer' },
-                      { value: 'UPI', icon: 'qr_code', label: 'UPI', desc: 'Direct UPI Transfer' },
-                      { value: 'CASH', icon: 'payments', label: 'Cash (on pickup)', desc: 'Pay when you collect' },
-                    ].map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setPaymentMethod(opt.value)}
-                        className={`flex items-center gap-stack-md p-stack-md border rounded-lg transition-all text-left ${
-                          paymentMethod === opt.value ? 'border-secondary bg-[#fff9f5]' : 'border-outline-variant hover:border-secondary'
-                        }`}
-                      >
-                        <div className="w-12 h-12 bg-surface-container rounded flex items-center justify-center text-primary">
-                          <span className="material-symbols-outlined text-3xl">{opt.icon}</span>
-                        </div>
-                        <div>
-                          <p className="font-bold text-on-surface">{opt.label}</p>
-                          <p className="font-body-sm text-body-sm text-on-surface-variant">{opt.desc}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {paymentMethod !== 'CASH' && (
-                  <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
-                    <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Transaction Details</h2>
-                    <div className="space-y-stack-md">
-                      <div>
-                        <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">UPI Transaction ID (UTR)</label>
-                        <input
-                          type="text"
-                          value={utr}
-                          onChange={(e) => setUtr(e.target.value)}
-                          className="input-field"
-                          placeholder="e.g., 123456789012"
-                          maxLength={50}
-                        />
-                        <p className="font-label-md text-label-md text-on-surface-variant mt-1">Enter the 12-digit UTR from your payment app after scanning the QR.</p>
+                {/* ── Razorpay selected ────────────────────────────── */}
+                {paymentMode === 'RAZORPAY' && (
+                  <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-xl shadow-sm">
+                    <div className="flex items-start gap-stack-md">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'linear-gradient(135deg, #7C3AED22, #7C3AED44)' }}>
+                        <span className="material-symbols-outlined" style={{ color: '#7C3AED', fontSize: '24px' }}>lock</span>
                       </div>
                       <div>
-                        <h3 className="font-body-sm text-body-sm font-semibold text-on-surface block mb-2">Payment Screenshot (Optional but recommended)</h3>
-                        <PaymentProofUpload onUploadComplete={(url) => setPaymentProofUrl(url)} />
+                        <p className="font-title-md text-on-surface font-semibold mb-1">Pay securely after placing the order</p>
+                        <p className="font-body-sm text-body-sm text-on-surface-variant">
+                          Click <strong>Place Order</strong> below — you'll be taken to the order page where the
+                          Razorpay checkout will open. Pay using cards, UPI, net banking, or wallets.
+                          Your order is <strong>auto-confirmed</strong> on successful payment.
+                        </p>
                       </div>
+                    </div>
+                    <div className="mt-stack-md p-stack-sm rounded-lg flex items-center gap-2" style={{ backgroundColor: '#0D946812' }}>
+                      <span className="material-symbols-outlined" style={{ color: '#0D9468', fontSize: '16px' }}>check_circle</span>
+                      <span className="font-body-sm text-body-sm" style={{ color: '#0D9468' }}>Amount: <strong>{formatCurrency(total)}</strong> — auto-confirmed instantly</span>
                     </div>
                   </div>
                 )}
 
-                {paymentMethod === 'CASH' && (
-                  <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-lg shadow-sm">
-                    <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Cash on Pickup</h2>
-                    <p className="font-body-sm text-body-sm text-on-surface-variant">You can pay with cash when you collect your order at the shop.</p>
-                  </div>
+                {/* ── Manual UPI selected ──────────────────────────── */}
+                {paymentMode === 'MANUAL_UPI' && (
+                  <>
+                    {/* QR Code section */}
+                    <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-xl shadow-sm">
+                      <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Scan & Pay (UPI)</h2>
+                      {shopLoading ? (
+                        <Spinner size="sm" />
+                      ) : shop?.upiId ? (
+                        <div className="flex flex-col items-center gap-stack-md p-stack-md bg-surface rounded-lg border border-outline-variant">
+                          <div className="bg-white p-4 rounded-lg">
+                            <QRCodeSVG
+                              value={`upi://pay?pa=${shop.upiId}&am=${total}&tn=PrintFlow&cu=INR`}
+                              size={180}
+                              level="M"
+                              includeMargin
+                            />
+                          </div>
+                          <div className="text-center">
+                            <p className="font-label-md text-label-md text-on-surface-variant">UPI ID</p>
+                            <p className="font-body-md text-body-md font-mono font-semibold text-primary">{shop.upiId}</p>
+                          </div>
+                          <div className="bg-surface-container-low p-stack-sm rounded-lg w-full text-center">
+                            <p className="font-body-sm text-body-sm text-on-surface-variant">Amount: <span className="font-bold text-primary font-headline-md text-headline-md">{formatCurrency(total)}</span></p>
+                            <p className="font-body-sm text-body-sm text-on-surface-variant mt-1">Send exact amount. Order ID will be in payment note.</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="font-body-sm text-body-sm text-on-surface-variant text-center p-stack-md">UPI details not available for this shop.</p>
+                      )}
+                    </div>
+
+                    {/* UPI app selector */}
+                    <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-xl shadow-sm">
+                      <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Which app did you pay with?</h2>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        {[
+                          { value: 'GPAY', icon: 'account_balance_wallet', label: 'Google Pay' },
+                          { value: 'PHONEPE', icon: 'smartphone', label: 'PhonePe' },
+                          { value: 'PAYTM', icon: 'payments', label: 'Paytm' },
+                          { value: 'UPI', icon: 'qr_code', label: 'Other UPI' },
+                        ].map((opt) => (
+                          <button
+                            key={opt.value}
+                            onClick={() => setManualUpiApp(opt.value)}
+                            className={`flex flex-col items-center gap-1 p-3 border rounded-lg transition-all ${
+                              manualUpiApp === opt.value ? 'border-primary bg-primary-container/30' : 'border-outline-variant hover:border-primary'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-2xl text-primary">{opt.icon}</span>
+                            <span className="font-label-md text-label-md text-on-surface">{opt.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Transaction details */}
+                    <div className="bg-surface-container-lowest border border-outline-variant p-stack-lg rounded-xl shadow-sm">
+                      <h2 className="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider mb-stack-md">Transaction Details</h2>
+                      <div className="space-y-stack-md">
+                        <div>
+                          <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">UPI Transaction ID (UTR)</label>
+                          <input
+                            type="text"
+                            value={utr}
+                            onChange={(e) => setUtr(e.target.value)}
+                            className="input-field"
+                            placeholder="e.g., 123456789012"
+                            maxLength={50}
+                          />
+                          <p className="font-label-md text-label-md text-on-surface-variant mt-1">Enter the 12-digit UTR from your payment app.</p>
+                        </div>
+                        <div>
+                          <h3 className="font-body-sm text-body-sm font-semibold text-on-surface block mb-2">Payment Screenshot (Required)</h3>
+                          <PaymentProofUpload onUploadComplete={(url) => setPaymentProofUrl(url)} />
+                        </div>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
             </>
