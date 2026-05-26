@@ -2,6 +2,8 @@
 
 A full-stack order management system for Xerox and print shops. Customers place print orders online with document configuration, upload files, and submit UPI payment proof. Shop owners manage the queue, track order status, verify payments, and communicate with customers.
 
+**[Live Landing Page](/) →** Public marketing site with features overview, pricing tiers, documentation, and contact form.
+
 ## Tech Stack
 
 ### Backend
@@ -26,6 +28,12 @@ A full-stack order management system for Xerox and print shops. Customers place 
 
 ## Features
 
+### Public Pages
+- **Landing page** (`/`) — Dark-themed marketing page with hero, feature showcase, pricing, and CTAs
+- **Documentation** (`/docs`) — Quick-start guide, queue management, file handling, and payments docs
+- **Contact** (`/contact`) — Contact form with subject selection and info cards
+- **Pricing section** → Starter (Free), Professional ($29/mo), Enterprise ($99/mo)
+
 ### Customer
 - Google sign-in
 - Place orders with up to 5 documents
@@ -35,7 +43,7 @@ A full-stack order management system for Xerox and print shops. Customers place 
 - UPI payment QR code + UTR (transaction ID) entry
 - Payment proof screenshot upload
 - Order history and detail view
-- Copy count modification within lock window
+- Copy count modification within lock window (increase-only, once per document)
 - Clarification thread with shop owner
 
 ### Shop Owner
@@ -77,9 +85,14 @@ printflow-frontend/
 │   ├── hooks/         # Custom hooks (useOrders, useAuth, etc.)
 │   ├── pages/
 │   │   ├── auth/      # LoginPage (split-screen, role toggle)
-│   │   ├── customer/  # OrderListPage, NewOrderPage, OrderDetailPage
-│   │   └── owner/     # DashboardPage, QueuePage, OwnerOrderDetailPage, SettingsPage, etc.
-│   ├── services/      # API clients (auth, orders, payments, shops, upload)
+│   │   ├── customer/  # OrderListPage, NewOrderPage, OrderDetailPage, NotificationsPage
+│   │   ├── owner/     # DashboardPage, QueuePage, OwnerOrderDetailPage, SettingsPage, etc.
+│   │   ├── LandingPage.tsx   # Marketing landing page (dark theme)
+│   │   ├── LandingPage.css   # Scoped dark theme CSS for public pages
+│   │   ├── DocsPage.tsx      # Documentation/help page
+│   │   ├── ContactPage.tsx   # Contact form page
+│   │   └── NotFoundPage.tsx  # 404 page
+│   ├── services/      # API clients (auth, orders, payments, shops, upload, clarifications)
 │   ├── store/         # Zustand stores (auth, shop)
 │   ├── types/         # TypeScript interfaces
 │   └── utils/         # Helpers (formatCurrency, formatDate)
@@ -87,6 +100,9 @@ printflow-frontend/
 ├── tailwind.config.js
 ├── vite.config.ts
 ├── package.json
+
+stitch_printflow_landing page/
+└── code.html          # Standalone landing page (in sync with React version)
 ```
 
 ## Getting Started
@@ -178,6 +194,7 @@ PostgreSQL with Flyway migrations (13 migrations):
 | V11 | Add notifications config |
 | V12 | Add index optimizations |
 | V13 | Add transaction_id to payments |
+| V14 | Add copy_modify_window_mins, copy_modify_expires_at, copies_modified_at |
 
 ## API Endpoints
 
@@ -208,6 +225,14 @@ PostgreSQL with Flyway migrations (13 migrations):
 - `GET /api/v1/shops/{id}/prices` — Get price config
 - `PATCH /api/v1/shops/{id}/prices` — Update prices
 - `PATCH /api/v1/shops/{id}/settings` — Update settings (lock timer, UPI)
+
+### Clarifications
+- `POST /api/v1/orders/{id}/clarifications` — Send a clarification message
+- `GET /api/v1/orders/{id}/clarifications` — Get clarification thread
+
+### Notifications
+- `GET /api/v1/notifications` — List user's notifications (paginated)
+- `PATCH /api/v1/notifications/{id}/read` — Mark notification as read
 
 ### Uploads
 - `POST /api/v1/uploads/sign` — Get signed Cloudinary upload URL
