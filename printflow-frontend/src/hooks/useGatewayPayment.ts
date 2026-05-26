@@ -120,6 +120,15 @@ export const useGatewayPayment = ({
         color: '#7C3AED', // Matches PrintFlow's primary purple
       },
 
+      // Enable all common Indian payment methods
+      method: {
+        upi: true,
+        card: true,
+        netbanking: true,
+        wallet: true,
+        paylater: true,
+      },
+
       modal: {
         ondismiss: () => {
           // User closed the modal without paying — return to idle

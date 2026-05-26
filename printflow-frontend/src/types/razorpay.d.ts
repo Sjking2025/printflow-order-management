@@ -23,6 +23,13 @@ interface RazorpayOptions {
     escape?: boolean
     backdropclose?: boolean
   }
+  method?: {
+    upi?: boolean
+    card?: boolean
+    netbanking?: boolean
+    wallet?: boolean
+    paylater?: boolean
+  }
 }
 
 interface RazorpayPaymentResponse {
