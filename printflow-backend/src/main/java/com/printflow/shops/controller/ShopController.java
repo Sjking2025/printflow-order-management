@@ -27,9 +27,26 @@ public class ShopController {
     }
 
     @GetMapping("/shops/public")
-    public ResponseEntity<ApiResponse<ShopResponse>> getDefaultShop() {
-        Shop shop = shopService.getDefaultShop();
-        return ResponseEntity.ok(ApiResponse.success(shopService.toResponse(shop)));
+    public ResponseEntity<ApiResponse<java.util.List<com.printflow.shops.dto.ShopPublicResponse>>> getAllShopsPublic() {
+        return ResponseEntity.ok(ApiResponse.success(shopService.getAllShopsPublic()));
+    }
+
+    @GetMapping("/owner/shop")
+    public ResponseEntity<ApiResponse<ShopResponse>> getOwnerShop(@AuthenticationPrincipal UserPrincipal principal) {
+        try {
+            Shop shop = shopService.getShopByOwnerId(principal.id());
+            return ResponseEntity.ok(ApiResponse.success(shopService.toResponse(shop)));
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(ApiResponse.error("No shop found for owner"));
+        }
+    }
+
+    @PostMapping("/shops")
+    public ResponseEntity<ApiResponse<ShopResponse>> createShop(
+            @Valid @RequestBody com.printflow.shops.dto.CreateShopRequest request,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        Shop shop = shopService.createShop(principal.id(), request);
+        return ResponseEntity.ok(ApiResponse.success(shopService.toResponse(shop), "Shop created successfully"));
     }
 
     @GetMapping("/shops/{shopId}")
@@ -70,9 +87,11 @@ public class ShopController {
         }
         Integer lockTimerMins = settings.get("lockTimerMins") != null
             ? Integer.valueOf(settings.get("lockTimerMins").toString()) : null;
+        Integer copyModifyWindowMins = settings.get("copyModifyWindowMins") != null
+            ? Integer.valueOf(settings.get("copyModifyWindowMins").toString()) : null;
         String upiId = (String) settings.get("upiId");
         String qrCodeUrl = (String) settings.get("qrCodeUrl");
-        Shop updated = shopService.updateSettings(shopId, lockTimerMins, upiId, qrCodeUrl);
+        Shop updated = shopService.updateSettings(shopId, lockTimerMins, copyModifyWindowMins, upiId, qrCodeUrl);
         return ResponseEntity.ok(ApiResponse.success(shopService.toResponse(updated), "Settings updated"));
     }
 

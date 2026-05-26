@@ -17,7 +17,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User findOrCreate(FirebaseToken firebaseToken) {
+    public User findOrCreate(FirebaseToken firebaseToken, String requestedRole) {
         return userRepository.findByFirebaseUid(firebaseToken.getUid())
             .orElseGet(() -> {
                 User newUser = User.builder()
@@ -25,6 +25,7 @@ public class UserService {
                     .name(firebaseToken.getName() != null ? firebaseToken.getName() : "User")
                     .email(firebaseToken.getEmail())
                     .avatarUrl(firebaseToken.getPicture())
+                    .role(requestedRole != null && requestedRole.equalsIgnoreCase("OWNER") ? "OWNER" : "CUSTOMER")
                     .build();
                 return userRepository.save(newUser);
             });

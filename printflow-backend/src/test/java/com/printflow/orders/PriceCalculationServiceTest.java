@@ -43,7 +43,9 @@ class PriceCalculationServiceTest {
     @Test
     void shouldApplyA3Multiplier() {
         var result = service.calculateDocumentPrice("BW", "A3", "SINGLE", "NONE", "NONE", 1, 1, defaultConfig());
-        assertEquals(new BigDecimal("1.00"), result.unitPrice());
+        // compareTo used because BigDecimal equality is scale-sensitive (1.00 != 1.0000)
+        assertEquals(0, new BigDecimal("1.00").compareTo(result.unitPrice()),
+            "Expected A3 unit price = 1.00 (0.50 × A3 multiplier 2.00)");
     }
 
     @Test

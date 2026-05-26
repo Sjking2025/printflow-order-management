@@ -8,5 +8,5 @@ interface UrgencyBadgeProps {
 export default function UrgencyBadge({ urgency }: UrgencyBadgeProps) {
   const colorClass = urgencyColors[urgency] || 'bg-gray-100 text-gray-700'
   const label = urgencyLabels[urgency] || urgency
-  return <Badge label={label} className={colorClass} />
+  return <Badge className={colorClass}>{label}</Badge>
 }

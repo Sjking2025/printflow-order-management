@@ -8,6 +8,7 @@ export interface DashboardStats {
   inProgressOrders: number
   completedToday: number
   revenueToday: number
+  revenueLifetime: number
   delayedOrders: number
 }
 
@@ -28,5 +29,18 @@ export const getOwnerOrder = async (orderId: string) => {
 
 export const setClosureMode = async (mode: string, message?: string, until?: string) => {
   const { data } = await api.post('/owner/closure', { mode, message, until })
+  return data.data
+}
+
+export interface ShopCustomerInfo {
+  customerId: string
+  customerName: string
+  customerEmail: string | null
+  orderCount: number
+  latestOrderDate: string
+}
+
+export const getShopCustomers = async () => {
+  const { data } = await api.get<ApiResponse<ShopCustomerInfo[]>>('/owner/customers')
   return data.data
 }

@@ -1,14 +1,23 @@
 import api from './api'
-import { ApiResponse, AuthResponse } from '../types/api.types'
+import { ApiResponse } from '../types/api.types'
+import { AuthResponse } from '../types/user.types'
 
-export const verifyFirebaseToken = async (firebaseToken: string) => {
+export const verifyFirebaseToken = async (firebaseToken: string, role?: string) => {
   const { data } = await api.post<ApiResponse<AuthResponse>>('/auth/verify', {
     firebaseToken,
+    role,
   })
   return data.data
 }
 
 export const getCurrentUser = async () => {
   const { data } = await api.get('/auth/me')
+  return data.data
+}
+
+export const refreshAccessToken = async (refreshToken: string) => {
+  const { data } = await api.post<ApiResponse<AuthResponse>>('/auth/refresh', {
+    refreshToken,
+  })
   return data.data
 }

@@ -39,6 +39,7 @@ public class PaymentService {
         payment.setProofUrl(request.proofUrl());
         payment.setMethod(request.method());
         payment.setAmount(request.amount());
+        payment.setTransactionId(request.transactionId());
         payment.setNotes(request.notes());
         payment.setStatus("PROOF_UPLOADED");
 

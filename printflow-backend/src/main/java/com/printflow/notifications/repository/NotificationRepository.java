@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
-    Page<Notification> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+    Page<Notification> findByUserIdAndChannelOrderByCreatedAtDesc(UUID userId, String channel, Pageable pageable);
+    Page<Notification> findByUserIdAndChannelAndStatusOrderByCreatedAtDesc(UUID userId, String channel, String status, Pageable pageable);
+    List<Notification> findByUserIdAndChannelAndStatus(UUID userId, String channel, String status);
     long countByUserIdAndStatusAndChannel(UUID userId, String status, String channel);
 }

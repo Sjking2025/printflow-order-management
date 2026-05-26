@@ -16,3 +16,11 @@ export const useOwnerQueue = (status?: string) => {
     refetchInterval: 15_000,
   })
 }
+
+export const useOwnerCustomers = () => {
+  return useQuery({
+    queryKey: ['owner-customers'],
+    queryFn: ownerService.getShopCustomers,
+    refetchInterval: 30_000,
+  })
+}

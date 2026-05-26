@@ -1,10 +1,11 @@
 import api from './api'
 
-export const submitPaymentProof = async (orderId: string, proofUrl: string, method: string, amount: number, notes?: string) => {
+export const submitPaymentProof = async (orderId: string, proofUrl: string, method: string, amount: number, transactionId?: string, notes?: string) => {
   const { data } = await api.post(`/payments/${orderId}/proof`, {
     proofUrl,
     method,
     amount,
+    transactionId,
     notes,
   })
   return data.data

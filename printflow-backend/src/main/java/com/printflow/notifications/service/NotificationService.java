@@ -31,15 +31,21 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final ShopRepository shopRepository;
+    private final WhatsAppService whatsappService;
+    private final SmsService smsService;
 
     public NotificationService(EmailService emailService,
                                NotificationRepository notificationRepository,
                                UserRepository userRepository,
-                               ShopRepository shopRepository) {
+                               ShopRepository shopRepository,
+                               WhatsAppService whatsappService,
+                               SmsService smsService) {
         this.emailService = emailService;
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
         this.shopRepository = shopRepository;
+        this.whatsappService = whatsappService;
+        this.smsService = smsService;
     }
 
     @Async("notificationExecutor")
@@ -60,17 +66,21 @@ public class NotificationService {
             }
 
             if (shouldSendWhatsApp(newStatus) && customer.getPhone() != null && template.whatsappMessage() != null) {
+                whatsappService.send(customer.getPhone(), template.whatsappMessage());
                 saveNotification(customer.getId(), order.getId(), newStatus.name(), "WHATSAPP",
                     null, template.whatsappMessage());
             }
 
             if (shouldSendSms(newStatus) && customer.getPhone() != null && template.smsMessage() != null) {
+                smsService.send(customer.getPhone(), template.smsMessage());
                 saveNotification(customer.getId(), order.getId(), newStatus.name(), "SMS",
                     null, template.smsMessage());
             }
 
-            saveNotification(customer.getId(), order.getId(), newStatus.name(), "IN_APP",
-                template.emailSubject(), template.emailBody());
+            if (newStatus != OrderStatus.WAITING_CLARIFICATION) {
+                saveNotification(customer.getId(), order.getId(), newStatus.name(), "IN_APP",
+                    template.emailSubject(), template.emailBody());
+            }
 
         } catch (Exception e) {
             log.error("Failed to send notification for order {}: {}", order.getOrderNumber(), e.getMessage());
@@ -109,6 +119,77 @@ public class NotificationService {
 
         } catch (Exception e) {
             log.error("Failed to notify owner about new order: {}", e.getMessage());
+        }
+    }
+
+    @Async("notificationExecutor")
+    public void notifyClarificationRequested(Order order, String clarificationMessage) {
+        try {
+            User customer = userRepository.findById(order.getCustomerId())
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
+            Shop shop = shopRepository.findById(order.getShopId())
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+
+            String subject = String.format("Action needed for your order %s \u2753", order.getOrderNumber());
+            String body = String.format("""
+                Hi %s,
+                
+                %s has a question about your order and needs your response before proceeding.
+                
+                Order: %s
+                Question: "%s"
+                
+                Please reply in the PrintFlow app.
+                
+                — PrintFlow""", customer.getName(), shop.getName(), order.getOrderNumber(), clarificationMessage);
+
+            if (customer.getEmail() != null) {
+                emailService.send(customer.getEmail(), subject, body);
+                saveNotification(customer.getId(), order.getId(), "WAITING_CLARIFICATION", "EMAIL", subject, body);
+            }
+
+            saveNotification(customer.getId(), order.getId(), "WAITING_CLARIFICATION", "IN_APP", subject, body);
+
+            if (customer.getPhone() != null) {
+                String waMsg = String.format("\u2753 *Question about your order %s*\n%s: \"%s\"\nPlease respond in the app.", 
+                        order.getOrderNumber(), shop.getName(), clarificationMessage);
+                whatsappService.send(customer.getPhone(), waMsg);
+                saveNotification(customer.getId(), order.getId(), "WAITING_CLARIFICATION", "WHATSAPP", null, waMsg);
+            }
+
+        } catch (Exception e) {
+            log.error("Failed to send clarification notification for order {}", order.getOrderNumber(), e);
+        }
+    }
+
+    @Async("notificationExecutor")
+    public void notifyClarificationReplied(Order order, String replyMessage) {
+        try {
+            Shop shop = shopRepository.findById(order.getShopId())
+                .orElseThrow(() -> new EntityNotFoundException("Shop not found"));
+            User owner = userRepository.findById(shop.getOwnerId())
+                .orElseThrow(() -> new EntityNotFoundException("Owner not found"));
+
+            String subject = String.format("Customer replied to clarification — %s", order.getOrderNumber());
+            String body = String.format("""
+                Customer has replied to your clarification request.
+                
+                Order: %s
+                Reply: "%s"
+                
+                Please check the clarification chat in your dashboard.
+                
+                — PrintFlow""", order.getOrderNumber(), replyMessage);
+
+            if (owner.getEmail() != null) {
+                emailService.send(owner.getEmail(), subject, body);
+                saveNotification(owner.getId(), order.getId(), "CLARIFICATION_REPLIED", "EMAIL", subject, body);
+            }
+
+            saveNotification(owner.getId(), order.getId(), "CLARIFICATION_REPLIED", "IN_APP", subject, body);
+
+        } catch (Exception e) {
+            log.error("Failed to notify owner about clarification reply: {}", e.getMessage());
         }
     }
 

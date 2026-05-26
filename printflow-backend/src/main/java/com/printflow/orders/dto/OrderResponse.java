@@ -18,6 +18,7 @@ public record OrderResponse(
     BigDecimal totalAmount,
     String paymentStatus,
     OffsetDateTime lockExpiresAt,
+    OffsetDateTime copyModifyExpiresAt,
     OffsetDateTime processingStartedAt,
     OrderCustomerInfo customer,
     List<DocumentResponse> documents,
@@ -32,10 +33,11 @@ public record OrderResponse(
                                    String printType, String sideType,
                                    String paperSize, String binding,
                                    String lamination, String notes,
-                                   BigDecimal subtotal) {}
+                                   BigDecimal subtotal,
+                                   OffsetDateTime copiesModifiedAt) {}
     public record PaymentInfo(UUID id, BigDecimal amount, String method,
                               String status, String proofUrl,
-                              OffsetDateTime verifiedAt) {}
+                              String transactionId, OffsetDateTime verifiedAt) {}
     public record StatusHistoryEntry(String fromStatus, String toStatus,
                                      String changedBy, String note,
                                      OffsetDateTime createdAt) {}

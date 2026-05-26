@@ -3,15 +3,16 @@ package com.printflow.queue.controller;
 import com.printflow.common.dto.ApiResponse;
 import com.printflow.common.security.UserPrincipal;
 import com.printflow.orders.dto.OrderSummaryResponse;
+import com.printflow.orders.dto.ShopCustomerStats;
 import com.printflow.orders.entity.Order;
 import com.printflow.orders.mapper.OrderMapper;
 import com.printflow.queue.service.QueueService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/owner")
@@ -26,6 +27,7 @@ public class QueueController {
     }
 
     @GetMapping("/queue")
+    @Transactional
     public ResponseEntity<ApiResponse<List<OrderSummaryResponse>>> getQueue(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestParam(defaultValue = "PENDING,ACCEPTED,IN_PROGRESS,DELAYED,WAITING_CLARIFICATION")
@@ -39,6 +41,13 @@ public class QueueController {
     public ResponseEntity<ApiResponse<QueueService.DashboardStats>> getDashboard(
             @AuthenticationPrincipal UserPrincipal principal) {
         QueueService.DashboardStats stats = queueService.getDashboardStats(principal.id());
+        return ResponseEntity.ok(ApiResponse.success(stats));
+    }
+
+    @GetMapping("/customers")
+    public ResponseEntity<ApiResponse<List<ShopCustomerStats>>> getCustomers(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        List<ShopCustomerStats> stats = queueService.getShopCustomerStats(principal.id());
         return ResponseEntity.ok(ApiResponse.success(stats));
     }
 }

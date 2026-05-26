@@ -1,6 +1,6 @@
 interface UploadProgressProps {
   progress: number
-  status: 'idle' | 'signing' | 'uploading' | 'done' | 'error'
+  status: string
   error?: string | null
 }
 

@@ -2,8 +2,6 @@ package com.printflow.auth.filter;
 
 import com.printflow.auth.service.JwtService;
 import com.printflow.common.security.UserPrincipal;
-import com.printflow.shops.entity.Shop;
-import com.printflow.shops.service.ShopService;
 import com.printflow.users.entity.User;
 import com.printflow.users.service.UserService;
 import jakarta.servlet.FilterChain;
@@ -20,6 +18,15 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * JWT authentication filter.
+ *
+ * Optimization: shopId is read directly from the JWT claims (embedded at login time)
+ * rather than issuing a second DB query per authenticated request. This eliminates the
+ * previously redundant call to ShopService.getShopIdByOwnerId() on every API call.
+ *
+ * One DB query per request remains (User lookup) for isActive / role verification.
+ */
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -27,12 +34,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserService userService;
-    private final ShopService shopService;
 
-    public JwtAuthFilter(JwtService jwtService, UserService userService, ShopService shopService) {
+    public JwtAuthFilter(JwtService jwtService, UserService userService) {
         this.jwtService = jwtService;
         this.userService = userService;
-        this.shopService = shopService;
     }
 
     @Override
@@ -46,17 +51,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             try {
                 UUID userId = jwtService.extractUserId(token);
-                String role = jwtService.extractRole(token);
+                // Read shopId from JWT claims — no DB round-trip needed
+                UUID shopId = jwtService.extractShopId(token);
+
                 Optional<User> userOpt = userService.findById(userId);
 
                 if (userOpt.isPresent()) {
-                    User user = userOpt.get();
-                    UUID shopId = null;
-                    if ("OWNER".equals(user.getRole())) {
-                        shopId = shopService.getShopIdByOwnerId(user.getId());
-                    }
-
-                    UserPrincipal principal = UserPrincipal.from(user, shopId);
+                    UserPrincipal principal = UserPrincipal.from(userOpt.get(), shopId);
                     var auth = new org.springframework.security.authentication
                         .UsernamePasswordAuthenticationToken(
                             principal, null, principal.getAuthorities());

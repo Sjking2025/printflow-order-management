@@ -61,6 +61,9 @@ public class Order {
     @Column(name = "lock_expires_at")
     private OffsetDateTime lockExpiresAt;
 
+    @Column(name = "copy_modify_expires_at")
+    private OffsetDateTime copyModifyExpiresAt;
+
     @Column(name = "processing_started_at")
     private OffsetDateTime processingStartedAt;
 

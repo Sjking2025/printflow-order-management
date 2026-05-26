@@ -36,6 +36,9 @@ public class Payment {
     @Column(name = "proof_url", columnDefinition = "TEXT")
     private String proofUrl;
 
+    @Column(name = "transaction_id", length = 100)
+    private String transactionId;
+
     @Column(name = "razorpay_id", length = 255)
     private String razorpayId;
 

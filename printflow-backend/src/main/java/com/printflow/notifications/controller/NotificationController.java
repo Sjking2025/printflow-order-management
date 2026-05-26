@@ -30,9 +30,37 @@ public class NotificationController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize,
             @RequestParam(required = false) Boolean unreadOnly) {
-        Page<Notification> notifications = notificationRepository
-            .findByUserIdOrderByCreatedAtDesc(principal.id(), PageRequest.of(page - 1, pageSize));
+        
+        Page<Notification> notifications;
+        if (Boolean.TRUE.equals(unreadOnly)) {
+            notifications = notificationRepository.findByUserIdAndChannelAndStatusOrderByCreatedAtDesc(
+                principal.id(), "IN_APP", "SENT", PageRequest.of(page - 1, pageSize));
+        } else {
+            notifications = notificationRepository.findByUserIdAndChannelOrderByCreatedAtDesc(
+                principal.id(), "IN_APP", PageRequest.of(page - 1, pageSize));
+        }
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(notifications)));
+    }
+
+    @GetMapping("/unread-count")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getUnreadCount(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        long count = notificationRepository.countByUserIdAndStatusAndChannel(principal.id(), "SENT", "IN_APP");
+        return ResponseEntity.ok(ApiResponse.success(Map.of("count", count)));
+    }
+
+    @PatchMapping("/read-all")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> markAllAsRead(
+            @AuthenticationPrincipal UserPrincipal principal) {
+        java.util.List<Notification> unread = notificationRepository.findByUserIdAndChannelAndStatus(
+            principal.id(), "IN_APP", "SENT");
+        
+        for (Notification n : unread) {
+            n.setStatus("READ");
+        }
+        notificationRepository.saveAll(unread);
+        
+        return ResponseEntity.ok(ApiResponse.success(Map.of("updatedCount", unread.size())));
     }
 
     @PatchMapping("/{id}/read")

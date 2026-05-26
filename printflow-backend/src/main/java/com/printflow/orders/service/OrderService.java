@@ -28,17 +28,20 @@ public class OrderService {
     private final OrderNumberGenerator orderNumberGenerator;
     private final PriceCalculationService priceCalculationService;
     private final ShopService shopService;
+    private final com.printflow.notifications.service.NotificationService notificationService;
 
     public OrderService(OrderRepository orderRepository,
                         OrderDocumentRepository documentRepository,
                         OrderNumberGenerator orderNumberGenerator,
                         PriceCalculationService priceCalculationService,
-                        ShopService shopService) {
+                        ShopService shopService,
+                        com.printflow.notifications.service.NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.documentRepository = documentRepository;
         this.orderNumberGenerator = orderNumberGenerator;
         this.priceCalculationService = priceCalculationService;
         this.shopService = shopService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -52,6 +55,8 @@ public class OrderService {
 
         String orderNumber = orderNumberGenerator.generate();
 
+        int modifyWindow = shop.getCopyModifyWindowMins() != null ? shop.getCopyModifyWindowMins() : 5;
+
         Order order = Order.builder()
             .shopId(request.shopId())
             .customerId(customerId)
@@ -61,6 +66,7 @@ public class OrderService {
             .expectedDelivery(request.expectedDelivery())
             .description(request.description())
             .totalAmount(BigDecimal.ZERO)
+            .copyModifyExpiresAt(OffsetDateTime.now().plusMinutes(modifyWindow))
             .build();
 
         BigDecimal documentsTotal = BigDecimal.ZERO;
@@ -100,7 +106,9 @@ public class OrderService {
         BigDecimal total = priceCalculationService.calculateOrderTotal(documentsTotal, urgencyFee);
         order.setTotalAmount(total);
 
-        return orderRepository.save(order);
+        order = orderRepository.save(order);
+        notificationService.notifyNewOrderToOwner(order);
+        return order;
     }
 
     public Order getOrderForCustomer(UUID orderId, UUID customerId) {

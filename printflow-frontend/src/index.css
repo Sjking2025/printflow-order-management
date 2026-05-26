@@ -11,8 +11,8 @@
   }
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-  ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+  ::-webkit-scrollbar-thumb { background: #c3c6d1; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #737780; }
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   input[type="number"] { -moz-appearance: textfield; }
@@ -20,31 +20,170 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-brand-blue text-white px-4 py-2 rounded-lg font-medium text-sm
-           hover:bg-blue-700 active:scale-95
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
-           transition-all duration-150;
+    background-color: theme('colors.secondary-container');
+    color: theme('colors.on-secondary-container');
+    font-family: theme('fontFamily.label-md');
+    font-size: theme('fontSize.label-md[0]');
+    line-height: theme('fontSize.label-md[1].lineHeight');
+    letter-spacing: theme('fontSize.label-md[1].letterSpacing');
+    font-weight: theme('fontSize.label-md[1].fontWeight');
+    height: 2.5rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: theme('borderRadius.lg');
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    transition: all 150ms;
   }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.95); }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .btn-primary:disabled:active { transform: none; }
+
+  .btn-outline {
+    border: 1px solid theme('colors.primary');
+    color: theme('colors.primary');
+    font-family: theme('fontFamily.label-md');
+    font-size: theme('fontSize.label-md[0]');
+    line-height: theme('fontSize.label-md[1].lineHeight');
+    letter-spacing: theme('fontSize.label-md[1].letterSpacing');
+    font-weight: theme('fontSize.label-md[1].fontWeight');
+    height: 2.5rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: theme('borderRadius.lg');
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    transition: all 150ms;
+  }
+  .btn-outline:hover { background-color: theme('colors.surface-container-highest'); }
+  .btn-outline:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .btn-ghost {
-    @apply text-gray-600 px-4 py-2 rounded-lg font-medium text-sm
-           hover:bg-gray-100
-           disabled:opacity-50 disabled:cursor-not-allowed
-           transition-all duration-150;
+    color: theme('colors.on-surface-variant');
+    font-family: theme('fontFamily.label-md');
+    font-size: theme('fontSize.label-md[0]');
+    line-height: theme('fontSize.label-md[1].lineHeight');
+    letter-spacing: theme('fontSize.label-md[1].letterSpacing');
+    font-weight: theme('fontSize.label-md[1].fontWeight');
+    height: 2.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: theme('borderRadius.lg');
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 150ms;
   }
+  .btn-ghost:hover {
+    background-color: theme('colors.surface-container');
+    color: theme('colors.on-surface');
+  }
+  .btn-ghost:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .btn-danger {
-    @apply bg-red-600 text-white px-4 py-2 rounded-lg font-medium text-sm
-           hover:bg-red-700 active:scale-95
-           disabled:opacity-50 disabled:cursor-not-allowed
-           transition-all duration-150;
+    background-color: theme('colors.error');
+    color: theme('colors.on-error');
+    font-family: theme('fontFamily.label-md');
+    font-size: theme('fontSize.label-md[0]');
+    line-height: theme('fontSize.label-md[1].lineHeight');
+    letter-spacing: theme('fontSize.label-md[1].letterSpacing');
+    font-weight: theme('fontSize.label-md[1].fontWeight');
+    height: 2.5rem;
+    padding: 0.5rem 1.5rem;
+    border-radius: theme('borderRadius.lg');
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    transition: all 150ms;
   }
+  .btn-danger:hover { opacity: 0.9; }
+  .btn-danger:active { transform: scale(0.95); }
+  .btn-danger:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .card {
-    @apply bg-white border border-gray-200 rounded-lg p-4 shadow-sm;
+    background-color: theme('colors.surface-container-lowest');
+    border: 1px solid theme('colors.outline-variant');
+    border-radius: theme('borderRadius.xl');
+    padding: theme('spacing.stack-md');
   }
+
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
   .input-field {
-    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-           focus:border-brand-blue focus:ring-1 focus:ring-brand-blue outline-none;
+    width: 100%;
+    height: 2.5rem;
+    border: 1px solid theme('colors.outline-variant');
+    border-radius: theme('borderRadius.lg');
+    padding: 0 0.75rem;
+    font-family: theme('fontFamily.body-md');
+    font-size: theme('fontSize.body-md[0]');
+    line-height: theme('fontSize.body-md[1].lineHeight');
+    background-color: theme('colors.surface-container-lowest');
+    outline: none;
   }
+  .input-field:focus {
+    border-color: theme('colors.primary');
+    box-shadow: 0 0 0 1px theme('colors.primary');
+  }
+  .input-field::placeholder {
+    color: theme('colors.on-surface-variant');
+    opacity: 0.6;
+  }
+
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: theme('borderRadius.full');
+    font-family: theme('fontFamily.label-md');
+    font-size: theme('fontSize.label-md[0]');
+    line-height: theme('fontSize.label-md[1].lineHeight');
+    letter-spacing: theme('fontSize.label-md[1].letterSpacing');
+    font-weight: theme('fontSize.label-md[1].fontWeight');
   }
+  .badge-pending {
+    @apply badge;
+    background-color: theme('colors.status-pending');
+    color: theme('colors.on-status-pending');
+  }
+  .badge-active {
+    @apply badge;
+    background-color: theme('colors.status-active');
+    color: theme('colors.on-status-active');
+  }
+  .badge-success {
+    @apply badge;
+    background-color: theme('colors.status-success');
+    color: theme('colors.on-status-success');
+  }
+  .badge-error {
+    @apply badge;
+    background-color: theme('colors.error');
+    color: theme('colors.on-error');
+  }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
