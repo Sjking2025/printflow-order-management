@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [shopId, setShopId] = useState<string | null>(null)
   const [prices, setPrices] = useState<PriceConfigData | null>(null)
   const [lockTimerMins, setLockTimerMins] = useState(5)
+  const [copyModifyWindowMins, setCopyModifyWindowMins] = useState(5)
   const [upiId, setUpiId] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -33,6 +34,7 @@ export default function SettingsPage() {
         const shop: any = await getMyShop()
         setShopId(shop.id)
         setLockTimerMins(shop.lockTimerMins ?? 5)
+        setCopyModifyWindowMins(shop.copyModifyWindowMins ?? 5)
         setUpiId(shop.upiId ?? '')
         const { data: priceRes } = await api.get(`/shops/${shop.id}/prices`)
         setPrices({
@@ -75,7 +77,7 @@ export default function SettingsPage() {
         urgencyHighFee: prices.urgencyHighFee,
         urgencyCriticalFee: prices.urgencyCriticalFee,
       })
-      await api.patch(`/shops/${shopId}/settings`, { lockTimerMins })
+      await api.patch(`/shops/${shopId}/settings`, { lockTimerMins, copyModifyWindowMins, upiId })
       setMessage('Settings saved successfully')
     } catch {
       setMessage('Failed to save settings')
@@ -169,6 +171,37 @@ export default function SettingsPage() {
             <span>2 min</span>
             <span>30 min</span>
           </div>
+        </div>
+        <div className="mt-stack-lg">
+          <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">Copy Modification Window ({copyModifyWindowMins} minutes)</label>
+          <input type="range" min="1" max="30" value={copyModifyWindowMins}
+            onChange={(e) => setCopyModifyWindowMins(parseInt(e.target.value))}
+            className="w-full accent-primary" />
+          <div className="flex justify-between font-label-md text-label-md text-on-surface-variant mt-1">
+            <span>1 min</span>
+            <span>30 min</span>
+          </div>
+          <p className="font-body-sm text-body-sm text-on-surface-variant mt-2">
+            Customers can increase copy counts within this window after placing an order.
+          </p>
+        </div>
+      </Card>
+
+      <Card>
+        <h3 className="font-label-md text-label-md text-on-surface-variant uppercase mb-4">Payment Details</h3>
+        <div className="space-y-stack-md">
+          <div>
+            <label className="font-body-sm text-body-sm font-semibold text-on-surface block mb-1">UPI ID</label>
+            <input type="text" value={upiId}
+              onChange={(e) => setUpiId(e.target.value)}
+              placeholder="e.g. shopname@upi" className="input-field" />
+          </div>
+          {upiId && (
+            <div className="bg-surface-bright rounded-lg p-stack-md border border-outline-variant text-center">
+              <p className="font-body-sm text-body-sm text-on-surface-variant mb-2">Customers will see this UPI ID on the payment screen</p>
+              <p className="font-label-lg text-label-lg text-primary font-semibold">{upiId}</p>
+            </div>
+          )}
         </div>
       </Card>
 

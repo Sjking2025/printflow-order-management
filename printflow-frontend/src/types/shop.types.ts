@@ -9,6 +9,7 @@ export interface Shop {
   closureMsg?: string
   closureUntil?: string
   lockTimerMins: number
+  copyModifyWindowMins: number
   upiId?: string
   qrCodeUrl?: string
 }

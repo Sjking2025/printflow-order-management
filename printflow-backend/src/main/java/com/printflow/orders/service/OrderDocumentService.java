@@ -2,7 +2,7 @@ package com.printflow.orders.service;
 
 import com.printflow.orders.entity.Order;
 import com.printflow.orders.entity.OrderDocument;
-import com.printflow.orders.exception.OrderLockExpiredException;
+import com.printflow.orders.exception.CopyModificationException;
 import com.printflow.orders.repository.OrderDocumentRepository;
 import com.printflow.orders.repository.OrderRepository;
 import com.printflow.shops.entity.PriceConfig;
@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -51,20 +50,29 @@ public class OrderDocumentService {
             throw new EntityNotFoundException("Document not found");
         }
 
-        boolean isDecreasing = newCopies < doc.getCopies();
+        if (!"PENDING".equals(order.getStatus())) {
+            throw new CopyModificationException(CopyModificationException.ErrorCode.NOT_PENDING,
+                "Order has already been accepted or processed. Modification is not allowed.");
+        }
 
-        if (isDecreasing) {
-            boolean lockActive = order.getLockExpiresAt() != null
-                && Instant.now().isBefore(order.getLockExpiresAt().toInstant());
-            boolean processingStarted = order.getProcessingStartedAt() != null;
+        if (order.getCopyModifyExpiresAt() != null
+            && OffsetDateTime.now().isAfter(order.getCopyModifyExpiresAt())) {
+            throw new CopyModificationException(CopyModificationException.ErrorCode.WINDOW_EXPIRED,
+                "Modification window has expired.");
+        }
 
-            if (processingStarted && !lockActive) {
-                throw new OrderLockExpiredException(
-                    "Cannot decrease copies after printing has started");
-            }
+        if (doc.getCopiesModifiedAt() != null) {
+            throw new CopyModificationException(CopyModificationException.ErrorCode.ALREADY_MODIFIED,
+                "This document has already been modified once.");
+        }
+
+        if (newCopies <= doc.getCopies()) {
+            throw new CopyModificationException(CopyModificationException.ErrorCode.INCREASE_ONLY,
+                "Cannot decrease copies. Only increase is allowed.");
         }
 
         doc.setCopies(newCopies);
+        doc.setCopiesModifiedAt(OffsetDateTime.now());
 
         PriceConfig priceConfig = shopService.getPriceConfig(order.getShopId());
         PriceCalculationService.CalculatedDocumentPrice calc =

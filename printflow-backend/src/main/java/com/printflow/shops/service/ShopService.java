@@ -98,13 +98,19 @@ public class ShopService {
     }
 
     @Transactional
-    public Shop updateSettings(UUID shopId, Integer lockTimerMins, String upiId, String qrCodeUrl) {
+    public Shop updateSettings(UUID shopId, Integer lockTimerMins, Integer copyModifyWindowMins, String upiId, String qrCodeUrl) {
         Shop shop = getShopById(shopId);
         if (lockTimerMins != null) {
             if (lockTimerMins < 2 || lockTimerMins > 30) {
                 throw new IllegalArgumentException("Lock timer must be between 2 and 30 minutes");
             }
             shop.setLockTimerMins(lockTimerMins);
+        }
+        if (copyModifyWindowMins != null) {
+            if (copyModifyWindowMins < 1 || copyModifyWindowMins > 30) {
+                throw new IllegalArgumentException("Copy modification window must be between 1 and 30 minutes");
+            }
+            shop.setCopyModifyWindowMins(copyModifyWindowMins);
         }
         if (upiId != null) shop.setUpiId(upiId);
         if (qrCodeUrl != null) shop.setQrCodeUrl(qrCodeUrl);
@@ -123,6 +129,7 @@ public class ShopService {
             shop.getClosureMsg(),
             shop.getClosureUntil(),
             shop.getLockTimerMins(),
+            shop.getCopyModifyWindowMins(),
             shop.getUpiId(),
             shop.getQrCodeUrl()
         );

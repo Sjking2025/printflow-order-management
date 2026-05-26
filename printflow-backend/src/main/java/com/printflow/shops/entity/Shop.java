@@ -51,6 +51,10 @@ public class Shop {
     @Builder.Default
     private Integer lockTimerMins = 5;
 
+    @Column(name = "copy_modify_window_mins", nullable = false)
+    @Builder.Default
+    private Integer copyModifyWindowMins = 5;
+
     @Column(name = "upi_id", length = 100)
     private String upiId;
 

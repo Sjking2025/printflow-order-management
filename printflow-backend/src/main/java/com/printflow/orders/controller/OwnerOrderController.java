@@ -67,7 +67,8 @@ public class OwnerOrderController {
                     doc.getPrintType(), doc.getSideType(),
                     doc.getPaperSize(), doc.getBinding(),
                     doc.getLamination(), doc.getNotes(),
-                    doc.getSubtotal()
+                    doc.getSubtotal(),
+                    doc.getCopiesModifiedAt()
                 ))
                 .toList();
         }
@@ -88,7 +89,8 @@ public class OwnerOrderController {
             order.getStatus(), order.getUrgency(),
             order.getExpectedDelivery(), order.getDescription(),
             order.getTotalAmount(), order.getPaymentStatus(),
-            order.getLockExpiresAt(), order.getProcessingStartedAt(),
+            order.getLockExpiresAt(), order.getCopyModifyExpiresAt(),
+            order.getProcessingStartedAt(),
             customer, documentResponses, payment, null, null,
             order.getCreatedAt()
         );

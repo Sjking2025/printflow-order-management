@@ -4,53 +4,66 @@ import { verifyFirebaseToken } from '../services/auth.service'
 
 const STORAGE_KEY = 'printflow_auth'
 
-function loadFromStorage(): { user: User | null; accessToken: string | null } {
+interface PersistedAuth {
+  user: User
+  accessToken: string
+  refreshToken: string
+}
+
+function loadFromStorage(): PersistedAuth | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw)
-      return { user: parsed.user ?? null, accessToken: parsed.accessToken ?? null }
+      return JSON.parse(raw)
     }
   } catch { /* ignore */ }
-  return { user: null, accessToken: null }
+  return null
 }
 
-function saveToStorage(user: User | null, accessToken: string | null) {
+function saveToStorage(data: PersistedAuth | null) {
   try {
-    if (user && accessToken) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, accessToken }))
+    if (data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
     } else {
       localStorage.removeItem(STORAGE_KEY)
     }
   } catch { /* ignore */ }
 }
 
-const { user: savedUser, accessToken: savedToken } = loadFromStorage()
+const saved = loadFromStorage()
 
 interface AuthState {
   user: User | null
   accessToken: string | null
+  refreshToken: string | null
   isLoading: boolean
   isAuthenticated: boolean
   login: (firebaseToken: string, role?: string) => Promise<void>
   logout: () => void
-  setUser: (user: User) => void
+  setTokens: (accessToken: string, refreshToken: string) => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: savedUser,
-  accessToken: savedToken,
+  user: saved?.user ?? null,
+  accessToken: saved?.accessToken ?? null,
+  refreshToken: saved?.refreshToken ?? null,
   isLoading: false,
-  isAuthenticated: !!savedUser && !!savedToken,
+  isAuthenticated: !!saved?.user && !!saved?.accessToken,
 
   login: async (firebaseToken: string, role?: string) => {
     set({ isLoading: true })
     try {
       const authResponse = await verifyFirebaseToken(firebaseToken, role)
-      saveToStorage(authResponse.user, authResponse.accessToken)
+      const persisted: PersistedAuth = {
+        user: authResponse.user,
+        accessToken: authResponse.accessToken,
+        refreshToken: authResponse.refreshToken,
+      }
+      saveToStorage(persisted)
       set({
         user: authResponse.user,
         accessToken: authResponse.accessToken,
+        refreshToken: authResponse.refreshToken,
         isAuthenticated: true,
         isLoading: false,
       })
@@ -61,17 +74,23 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    saveToStorage(null, null)
+    saveToStorage(null)
     set({
       user: null,
       accessToken: null,
+      refreshToken: null,
       isAuthenticated: false,
     })
   },
 
-  setUser: (user: User) => {
-    const { accessToken } = useAuthStore.getState()
-    saveToStorage(user, accessToken)
-    set({ user })
+  setTokens: (accessToken: string, refreshToken: string) => {
+    const current = useAuthStore.getState()
+    const persisted: PersistedAuth = {
+      user: current.user!,
+      accessToken,
+      refreshToken,
+    }
+    saveToStorage(persisted)
+    set({ accessToken, refreshToken })
   },
 }))

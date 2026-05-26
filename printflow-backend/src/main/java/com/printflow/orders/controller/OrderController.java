@@ -6,6 +6,7 @@ import com.printflow.common.security.UserPrincipal;
 import com.printflow.orders.dto.*;
 import com.printflow.orders.entity.Order;
 import com.printflow.orders.entity.OrderDocument;
+import com.printflow.orders.exception.CopyModificationException;
 import com.printflow.orders.mapper.OrderMapper;
 import com.printflow.orders.service.OrderDocumentService;
 import com.printflow.orders.service.OrderService;
@@ -110,19 +111,17 @@ public class OrderController {
             data.put("copies", doc.getCopies());
             data.put("newSubtotal", doc.getSubtotal());
             data.put("newOrderTotal", order.getTotalAmount());
+            data.put("copiesModifiedAt", doc.getCopiesModifiedAt());
             return ResponseEntity.ok(ApiResponse.success(data));
-        } catch (Exception e) {
-            if (e.getMessage().contains("Cannot decrease")) {
-                Map<String, Object> errorBody = new HashMap<>();
-                Map<String, Object> errorDetail = new HashMap<>();
-                errorDetail.put("code", "ORDER_LOCK_EXPIRED");
-                errorDetail.put("message", e.getMessage());
-                errorDetail.put("field", "copies");
-                errorBody.put("success", false);
-                errorBody.put("error", errorDetail);
-                return ResponseEntity.status(409).body(errorBody);
-            }
-            throw e;
+        } catch (CopyModificationException e) {
+            Map<String, Object> errorBody = new HashMap<>();
+            Map<String, Object> errorDetail = new HashMap<>();
+            errorDetail.put("code", e.getErrorCode().name());
+            errorDetail.put("message", e.getMessage());
+            errorDetail.put("field", "copies");
+            errorBody.put("success", false);
+            errorBody.put("error", errorDetail);
+            return ResponseEntity.status(409).body(errorBody);
         }
     }
 
@@ -142,7 +141,8 @@ public class OrderController {
                     doc.getPrintType(), doc.getSideType(),
                     doc.getPaperSize(), doc.getBinding(),
                     doc.getLamination(), doc.getNotes(),
-                    doc.getSubtotal()
+                    doc.getSubtotal(),
+                    doc.getCopiesModifiedAt()
                 ))
                 .toList();
         }
@@ -163,7 +163,8 @@ public class OrderController {
             order.getStatus(), order.getUrgency(),
             order.getExpectedDelivery(), order.getDescription(),
             order.getTotalAmount(), order.getPaymentStatus(),
-            order.getLockExpiresAt(), order.getProcessingStartedAt(),
+            order.getLockExpiresAt(), order.getCopyModifyExpiresAt(),
+            order.getProcessingStartedAt(),
             customer, documents, payment, null, null,
             order.getCreatedAt()
         );

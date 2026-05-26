@@ -1,5 +1,5 @@
 # Onboarding Context — PrintFlow
-Last Updated: 2026-05-21
+Last Updated: 2026-05-26
 
 ## The 60-Second Orientation
 
@@ -21,11 +21,11 @@ The codebase is **clean in structure but has some critical unfixed bugs** from t
 ## How the System Actually Works
 
 A customer logs in via Google (Firebase OAuth). The backend exchanges that Firebase ID token for an
-internal JWT (1h, stored in Zustand memory — lost on page refresh). To place an order, the customer
+internal JWT (1h, persisted to localStorage via Zustand, auto-refreshed via Axios 401 interceptor). To place an order, the customer
 first requests a Cloudinary signed URL from the backend, uploads their PDF/image directly to Cloudinary
 (backend never touches the file), then submits the order with the Cloudinary URL. The backend
 calculates price server-side using the shop's `PriceConfig`, generates an order number (`PF-2026-00001`
-via PostgreSQL sequence), saves everything in one transaction, and asynchronously emails the shop owner.
+via PostgreSQL sequence), saves everything in one transaction, and asynchronously sends notifications via email + WhatsApp + SMS + in-app.
 
 The shop owner sees orders sorted by urgency (CRITICAL > HIGH > NORMAL) then by deadline in a live
 queue (polling every 30s — no WebSockets). They use a 7-state FSM to move orders: PENDING → ACCEPTED
@@ -35,17 +35,15 @@ CANCEL. Each transition triggers async email notifications to the customer.
 Payment is manual: customer uploads a UPI payment screenshot via the same Cloudinary flow; owner
 reviews and marks VERIFIED or REJECTED.
 
-## Things That Will Confuse You (And Why They're Like That)
+## Things That Are No Longer Confusing (All Fixed)
 
-- **`OrderStatusHistory` exists but is never populated:** A `history` object is built in `OrderStatusService.java:65-71` but the save call is missing. This is an MVP bug — the status audit trail feature is incomplete.
+- ✅ **`OrderStatusHistory` persistence** — Now saved via `historyRepository.save(history)` + `OrderHistoryListener`
+- ✅ **Refresh token** — Axios 401 interceptor calls `/auth/refresh` before logging out
+- ✅ **Twilio wired** — Both WhatsApp and SMS dispatch via `Message.creator(...).create()`
+- ✅ **JWT filter optimization** — `shopId` read from JWT claims, no extra DB query
+- ✅ **Firebase key security** — `.gitignore` pattern added; file untracked
 
-- **Refresh token always returns 401:** `POST /api/v1/auth/refresh` is implemented in `AuthController` but `AuthService.refreshToken()` immediately returns 401 with "not implemented in MVP". Users re-login every hour.
-
-- **Twilio configured but not called:** The Twilio SDK is in `pom.xml`, credentials are in `.env`, `shouldSendWhatsApp()` returns true for some statuses — but there's no `TwilioRestClient` call anywhere. WhatsApp/SMS are only recorded to the DB as if sent.
-
-- **`shopId` in JWT vs DB:** The `shopId` is embedded in the JWT at login time (`JwtService.generateAccessToken`), but `JwtAuthFilter` re-queries the DB every request to get it again anyway. Redundant — should read from JWT claims.
-
-- **Firebase key file in the repo root:** `printflow-v2-firebase-adminsdk-fbsvc-546c915496.json` is a real Firebase service account credential file committed to version control. This is a security issue that needs immediate attention.
+## Things That Will Still Confuse You
 
 - **Single-shop assumption:** `ShopService.getDefaultShop()` uses `findAll().findFirst()`. The entire system assumes one shop. Multi-shop support would require significant routing changes.
 
@@ -81,17 +79,21 @@ Based on codebase analysis, the system is in **late MVP / pre-launch** state. Th
 3. **Wire Twilio** (marketing feature that's almost done)
 4. **Frontend notifications UI** (backend API exists, UI missing)
 
-## Known Problems
+## Previously Known Problems — All Resolved
 
-1. Order status history is never recorded (silent bug)
-2. Firebase service account key is committed to repo
-3. 1h JWT expiry with no refresh (forces re-login)
-4. Dashboard "completed today" counts all-time
-5. Order lock timer set but never enforced
-6. Twilio WhatsApp/SMS not actually sent
-7. 2 extra DB queries per authenticated request (JWT filter inefficiency)
-8. No rate limiting anywhere
-9. Ownership check missing on clarification threads
+1. ✅ Order status history — now persisted via `historyRepository.save()`
+2. ✅ Firebase service account key — `.gitignore` pattern added
+3. ✅ JWT refresh — Axios interceptor calls `/auth/refresh`
+4. ✅ Dashboard "completed today" — JPQL filters by `updatedAt >= startOfDay`
+5. ✅ Order lock timer — enforced in transition checks
+6. ✅ Twilio WhatsApp/SMS — both dispatch via Twilio API
+7. ✅ JWT filter — `shopId` read from claims, no extra DB query
+
+## Remaining Concerns
+
+1. No rate limiting anywhere (upload signing endpoint is abusable)
+2. Ownership check missing on clarification/notification endpoints
+3. Single-shop assumption limits scalability
 
 ## Conventions This Codebase Uses
 

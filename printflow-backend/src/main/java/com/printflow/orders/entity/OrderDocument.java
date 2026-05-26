@@ -71,6 +71,9 @@ public class OrderDocument {
     @Column(precision = 10, scale = 2)
     private BigDecimal subtotal;
 
+    @Column(name = "copies_modified_at")
+    private OffsetDateTime copiesModifiedAt;
+
     @Column(name = "sort_order", nullable = false)
     @Builder.Default
     private Integer sortOrder = 0;

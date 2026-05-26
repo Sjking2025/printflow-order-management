@@ -12,6 +12,7 @@ export interface OrderDocument {
   lamination: 'NONE' | 'SINGLE_SIDE' | 'BOTH_SIDES'
   notes?: string
   subtotal?: number
+  copiesModifiedAt?: string
 }
 
 export interface UploadedFile extends OrderDocument {
@@ -30,6 +31,7 @@ export interface Order {
   totalAmount: number
   paymentStatus: string
   lockExpiresAt?: string
+  copyModifyExpiresAt?: string
   processingStartedAt?: string
   customer?: { id: string; name: string; phone?: string }
   documents: OrderDocument[]

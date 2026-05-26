@@ -14,3 +14,10 @@ export const getCurrentUser = async () => {
   const { data } = await api.get('/auth/me')
   return data.data
 }
+
+export const refreshAccessToken = async (refreshToken: string) => {
+  const { data } = await api.post<ApiResponse<AuthResponse>>('/auth/refresh', {
+    refreshToken,
+  })
+  return data.data
+}

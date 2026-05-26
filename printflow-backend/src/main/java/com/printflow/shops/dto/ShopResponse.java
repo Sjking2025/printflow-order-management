@@ -14,6 +14,7 @@ public record ShopResponse(
     String closureMsg,
     OffsetDateTime closureUntil,
     Integer lockTimerMins,
+    Integer copyModifyWindowMins,
     String upiId,
     String qrCodeUrl
 ) {}

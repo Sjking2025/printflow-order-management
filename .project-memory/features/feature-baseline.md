@@ -1,6 +1,6 @@
 # Feature Baseline
-Generated: 2026-05-21
-Commit: HEAD
+Generated: 2026-05-26
+Commit: 18d5449 (ui-redesign, 9 ahead of main)
 
 ## ✅ Implemented Features
 
@@ -16,7 +16,7 @@ Commit: HEAD
 | Price Calculation (Server-side) | `PriceCalculationService.java` | BW/Color, A4/A3, single/double side, binding, lamination, urgency fee |
 | Price Calculator (Client-side preview) | `usePriceCalculator.ts`, `PriceBreakdown.tsx` | Mirrors server logic for real-time preview |
 | Order Status FSM | `OrderStatusTransitions.java`, `OrderStatusService.java` | 7-state machine with validation; PENDING→ACCEPTED→IN_PROGRESS→COMPLETED |
-| Status History Tracking | `OrderStatusHistory.java`, `V7__create_order_status_history.sql` | Every transition recorded with actor + note |
+| Status History Tracking | `OrderStatusHistory.java`, `V7__create_order_status_history.sql`, `OrderHistoryListener.java` | Every transition recorded with actor + note; persisted via `historyRepository.save()` in `OrderStatusService` + `@PreUpdate`/`@PostPersist` listener |
 | Owner: Priority Queue | `QueueController.java`, `QueueService.java`, `QueuePage.tsx` | Sorted: CRITICAL > HIGH > NORMAL > expectedDelivery > createdAt |
 | Owner: Dashboard Stats | `QueueService.getDashboardStats()`, `DashboardPage.tsx` | pending, urgent, inProgress, completedToday, revenueToday |
 | Owner: Accept/Reject/Progress Order | `OwnerOrderController.java`, `OrderStatusService.java` | FSM-validated status transitions |
@@ -31,32 +31,13 @@ Commit: HEAD
 | Shop Open/Close Toggle | `ShopController.java`, `ShopService.java`, `ClosurePage.tsx` | OPEN/TEMPORARY/PERMANENT modes with closure message + timestamp |
 | Shop Pricing Configuration | `ShopController.java`, `ShopService.java`, `SettingsPage.tsx` | Owner can update all price variables live |
 | Shop Settings (lock timer, UPI, QR) | `ShopService.updateSettings()` | Lock timer 2-30 min, UPI ID, QR code URL |
-| Order Lock Timer (ACCEPTED) | `OrderStatusService.java:46` | Sets `lockExpiresAt = now + 5min` when ACCEPTED |
+| Order Lock Timer (ACCEPTED) | `OrderStatusService.java` | Sets `lockExpiresAt = now + lockTimerMins` when ACCEPTED; timer enforced in transition checks |
 | Order Number Generation | `OrderNumberGenerator.java`, `V10__add_order_number_sequence.sql` | Format: `PF-YYYY-NNNNN` using PostgreSQL sequence |
 | Public Shop Info Endpoint | `GET /api/v1/shops/public` | No auth required; lists available shops |
 | Role-Based Access Control | `SecurityConfig.java` | OWNER vs CUSTOMER roles; JWT claims; route guards |
 | Frontend Route Guards | `App.tsx` (ProtectedRoute, OwnerRoute) | Redirects unauthenticated/wrong-role users |
 | Default Price Seeding | `V11__seed_default_price_config.sql` | Reasonable defaults seeded on DB migration |
 | Actuator Health Check | `/actuator/health` | No auth; suitable for load balancer probes |
-
-## 🚧 Partial / In-Progress
-
-| Feature | Location | What's Missing |
-|---------|----------|----------------|
-| Refresh Token Rotation | `AuthService.refreshToken()` | Returns 401 "not implemented in MVP" — refresh token is issued but does nothing; users re-login after 1h |
-| Order Lock Timer Enforcement | `OrderStatusService.java:39-46` | `lockExpiresAt` is SET when order ACCEPTED, but nowhere in the codebase is this timestamp CHECKED or enforced to prevent race conditions |
-| WhatsApp & SMS Notifications | `NotificationService.java` | Twilio SDK present in `pom.xml`, but no integration exists to actually dispatch messages. |
-| Notification Pipeline Triggers | `OrderStatusService`, `OrderService` | Status changes and order creations do not trigger notifications. |
-| Clarification Notification Triggers | `ClarificationService.java` | Does not dispatch notifications when clarification is requested or replied to. |
-| Clarification Chat UI | `ClarificationDrawer.tsx` (Missing) | Frontend buttons are stubs; missing the sliding drawer chat UI from mockups. |
-| Frontend Notifications UI | `NotificationsPage.tsx` (Missing) | Missing dedicated notifications page and header unread badge. |
-
-## 🔴 Broken / Stubbed
-
-| Feature | Evidence | Risk |
-|---------|----------|------|
-| `OrderStatusHistory` persistence in `OrderStatusService` | `history` object is built (lines 65-71) but **never persisted** (`orderRepository.save(history)` is missing — the `@Transactional` save only saves the `Order`, not the `OrderStatusHistory`) | History table will always be empty |
-| Nested `Optional.get().get()` in `OrderStatusService` (lines 40-44) | Dead/confusing code path — `lockMins` is computed but never actually used to set the lock | Fragile code with unclear intent |
 
 ## 🧊 Abandoned / Dormant
 

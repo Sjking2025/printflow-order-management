@@ -87,9 +87,11 @@ public class ShopController {
         }
         Integer lockTimerMins = settings.get("lockTimerMins") != null
             ? Integer.valueOf(settings.get("lockTimerMins").toString()) : null;
+        Integer copyModifyWindowMins = settings.get("copyModifyWindowMins") != null
+            ? Integer.valueOf(settings.get("copyModifyWindowMins").toString()) : null;
         String upiId = (String) settings.get("upiId");
         String qrCodeUrl = (String) settings.get("qrCodeUrl");
-        Shop updated = shopService.updateSettings(shopId, lockTimerMins, upiId, qrCodeUrl);
+        Shop updated = shopService.updateSettings(shopId, lockTimerMins, copyModifyWindowMins, upiId, qrCodeUrl);
         return ResponseEntity.ok(ApiResponse.success(shopService.toResponse(updated), "Settings updated"));
     }
 

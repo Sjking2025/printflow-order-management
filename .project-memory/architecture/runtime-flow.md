@@ -1,5 +1,5 @@
 # Runtime Execution Flow
-Last Updated: 2026-05-21
+Last Updated: 2026-05-26
 
 ## Startup Sequence
 
@@ -22,7 +22,7 @@ JwtAuthFilter.doFilterInternal()
   ├─ Extract "Bearer {token}" from Authorization header
   ├─ jwtService.extractUserId(token) → parse HMAC-SHA256 JWT
   ├─ userService.findById(userId) → DB query (users table)
-  ├─ IF OWNER: shopService.getShopIdByOwnerId() → DB query (shops table)
+  ├─ jwtService.extractShopId(token) → from JWT claims (NO DB query)
   └─ Set SecurityContext with UserPrincipal (userId, role, shopId, authorities)
   │
   ▼
@@ -70,17 +70,18 @@ UserService.findOrCreate(firebaseToken)
   │
   ▼
 ShopService.getShopIdByOwnerId() → null if CUSTOMER, UUID if OWNER
-  │
-  ▼
+   │
+   ▼
 JwtService.generateAccessToken(user, shopId)
-  ├─ Claims: sub=userId, email, role, shopId
-  └─ Expires: 3600 seconds (1 hour)
-  │
-  ▼
-Response: { accessToken, refreshToken (UUID), expiresIn:3600, user:{...} }
+   ├─ Claims: sub=userId, email, role, shopId
+   └─ Expires: 3600 seconds (1 hour)
+   │
+   ▼
+Response: { accessToken, refreshToken, expiresIn:3600, user:{...} }
 
-⚠️  Refresh token is a UUID stored nowhere — refresh endpoint returns 401 "not implemented in MVP"
-    Tokens expire in 1h and user must re-login via Firebase.
+✅ Refresh token is returned from auth controller; frontend stores it in localStorage
+   Via Zustand auth.store → persists under `printflow_auth` key
+   Axios response interceptor catches 401 → calls POST /api/v1/auth/refresh → retries original request
 ```
 
 ## Order Creation Flow (Customer)
@@ -134,8 +135,8 @@ notificationService.notifyOrderStatusChange(order, newStatus)  ← @Async("notif
   ├─ Resolves template based on OrderStatus enum switch
   ├─ Substitutes {{vars}} in template
   ├─ emailService.send() → Gmail SMTP
-  ├─ IF status in {ACCEPTED, DELAYED, WAITING_CLARIF, COMPLETED, CANCELLED}:
-  │   save WHATSAPP notification to DB (but Twilio NOT called)
+  ├─ WhatsAppService.send() → Twilio API (Message.creator)
+  ├─ SmsService.send() → Twilio API (Message.creator)
   └─ save IN_APP notification to DB (always)
 ```
 
@@ -154,7 +155,8 @@ React Query: useQuery/useMutation → service function
   ▼
 Axios instance (api.ts)
   ├─ Request interceptor: reads accessToken from Zustand store → adds Authorization header
-  └─ Response interceptor: 401 → call useAuthStore.getState().logout()
+  └─ Response interceptor: 401 → call useAuthStore.getState().setTokens() → retry original request
+                                   → if refresh fails → call useAuthStore.getState().logout()
   │
   ▼
 Backend REST API → Response

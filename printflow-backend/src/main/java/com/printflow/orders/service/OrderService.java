@@ -55,6 +55,8 @@ public class OrderService {
 
         String orderNumber = orderNumberGenerator.generate();
 
+        int modifyWindow = shop.getCopyModifyWindowMins() != null ? shop.getCopyModifyWindowMins() : 5;
+
         Order order = Order.builder()
             .shopId(request.shopId())
             .customerId(customerId)
@@ -64,6 +66,7 @@ public class OrderService {
             .expectedDelivery(request.expectedDelivery())
             .description(request.description())
             .totalAmount(BigDecimal.ZERO)
+            .copyModifyExpiresAt(OffsetDateTime.now().plusMinutes(modifyWindow))
             .build();
 
         BigDecimal documentsTotal = BigDecimal.ZERO;

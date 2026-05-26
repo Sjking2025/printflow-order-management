@@ -1,18 +1,40 @@
 # Branch Intelligence
-Last Updated: 2026-05-21
+Last Updated: 2026-05-26
 
-## Current Branch
-- **main** (default) — only branch detected; no feature branches active
+## Currently Active Branch
+**Name:** ui-redesign
+**Created from:** main
+**Purpose:** UI redesign and all MVP bug fixes — all 11 implementation plan items completed
+**Status:** ✅ Ready for merge to main — all MVP features verified working
+**Commits ahead of main:** 9
 
-## Git History Analysis
-- No `git log` history available in this analysis session (Windows environment, git command not run).
-- Repo shows `stitch_printflow_*` directories in three parts (part1, part2, part3) suggesting iterative UI design work was done in separate export batches — all committed to main.
+## Branch Inventory
 
-## Observed Development Patterns
-- UI mockups (`stitch_printflow_*`) were committed alongside working code — not separated into design branches
-- The `PrintFlow_Master Documents/` folder contains 15 engineering design docs suggesting a spec-first approach
-- 11 Flyway migrations in sequence suggest incremental schema evolution (not a single big-bang schema)
+| Branch | Last Activity | Purpose | Status |
+|--------|--------------|---------|--------|
+| main | 2026-05-26 | Production baseline (old, outdated) | 🟡 Out of date |
+| ui-redesign | 2026-05-26 | UI redesign + all MVP fixes | ✅ Ready to merge (9 commits ahead) |
 
-## Active Work Signals
-- `stitch_printflow_focus_on_digital_order_management_for_xerox_shops_part3` is the most recent Stitch export batch — suggests frontend UI was being actively designed
-- `start-dev.ps1` exists in backend root — suggests the developer works on Windows (PowerShell dev script)
+## All Changes on ui-redesign (Complete List)
+- Full MD3 color system + responsive layouts (16-phase UI redesign)
+- Payment flow: dynamic UPI QR, UTR input, StatusTimeline
+- OrderResponse DTO now populates documents/payment/customer info
+- SettingsPage uses real shop ID from backend
+- PDF preview via Cloudinary JPG conversion, download via fetch+blob
+- Auth persistence via localStorage
+- Refresh token wired (Axios 401 interceptor)
+- All `Map.of()` NPEs fixed; `@Transactional` added to prevent LazyInitializationExceptions
+- Owner dashboard: customers tab, real queue data, fixed navigation
+- `ShopPublicResponse` fixed to include `upiId` and `qrCodeUrl`
+- OrderStatusHistory persistence (via `OrderHistoryListener`)
+- Firebase key gitignored
+- completedToday stat fixed (date-filtered JPQL)
+- JWT filter optimization (shopId from claims)
+- ClarificationService routes through FSM
+- Twilio WhatsApp/SMS dispatch wired
+- NotificationsPage + header unread badge
+- ClarificationDrawer chat UI (full sliding drawer with quick replies)
+
+## Merge Recommendation
+`ui-redesign` is ready to merge into `main`. All 11 implementation plan items are complete.
+No known regressions on `main` that need porting back.

@@ -1,6 +1,6 @@
 # Architecture Map
-Last Updated: 2026-05-21
-Analyzed Commit: HEAD (main branch)
+Last Updated: 2026-05-26
+Analyzed Commit: 18d5449 (ui-redesign, 9 ahead of main)
 
 ## System Overview
 PrintFlow is a digital order management platform for Xerox/print shops in India. It replaces the
@@ -60,7 +60,7 @@ backed by PostgreSQL with Flyway migrations and Firebase for Google OAuth.
 ### notifications
 - **Purpose:** Async multi-channel notification dispatch on order status changes
 - **Consumes:** Order state, customer + shop contact info
-- **Produces:** Email (Gmail SMTP), In-App notifications; WhatsApp/SMS recorded but not yet dispatched via Twilio
+- **Produces:** Email (Gmail SMTP), WhatsApp (Twilio API), SMS (Twilio API), In-App notifications
 - **Coupled to:** users, shops, orders — reads all three
 
 ### clarifications
@@ -112,5 +112,5 @@ Owner JWT → `GET /api/v1/owner/queue` → JPQL priority sort (CRITICAL → HIG
 - **Firebase Auth:** Google OAuth provider; backend verifies ID tokens using firebase-admin SDK
 - **Cloudinary:** Document/image CDN; backend generates signed URLs, client uploads directly (no backend file proxying)
 - **Gmail SMTP:** Transactional email via Spring Mail; notifications dispatched asynchronously
-- **Twilio:** Configured in POM and env; WhatsApp/SMS notifications stored in DB but **Twilio dispatch not wired** (only DB-saved)
+- **Twilio:** WhatsApp and SMS dispatch via Twilio API; both `WhatsAppService` and `SmsService` call `Message.creator(...).create()`
 - **PostgreSQL:** Primary data store via Spring Data JPA + Flyway migrations
