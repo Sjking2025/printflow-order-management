@@ -281,6 +281,11 @@ export default function OwnerOrderDetailPage() {
                   Resolve (Back to Accepted)
                 </button>
               )}
+              <hr className="border-outline-variant my-1" />
+              <button onClick={() => setClarifyModal(true)} className="btn-ghost w-full">
+                <span className="material-symbols-outlined text-[18px]">chat</span>
+                Open Chat
+              </button>
             </div>
           </Card>
         </div>

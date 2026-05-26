@@ -8,10 +8,13 @@ import {
   markAllAsRead, 
   Notification 
 } from '../../services/notifications.service'
+import { useAuthStore } from '../../store/auth.store'
 
 export default function NotificationsPage() {
   const [filter, setFilter] = useState<'ALL' | 'UNREAD'>('ALL')
   const queryClient = useQueryClient()
+  const user = useAuthStore((s) => s.user)
+  const isOwner = user?.role === 'OWNER'
 
   const { data, isLoading } = useQuery({
     queryKey: ['notifications', filter],
@@ -44,6 +47,8 @@ export default function NotificationsPage() {
 
   const getIconForType = (type: string) => {
     switch (type) {
+      case 'NEW_ORDER': return 'assignment_add'
+      case 'CLARIFICATION_REPLIED': return 'forum'
       case 'DELAYED': return 'warning'
       case 'WAITING_CLARIFICATION': return 'contact_support'
       case 'COMPLETED': return 'task_alt'
@@ -56,6 +61,8 @@ export default function NotificationsPage() {
 
   const getIconColorForType = (type: string) => {
     switch (type) {
+      case 'NEW_ORDER': return 'bg-tertiary-container text-on-tertiary-container'
+      case 'CLARIFICATION_REPLIED': return 'bg-secondary-container text-on-secondary-container'
       case 'DELAYED': return 'bg-error-container text-on-error-container'
       case 'WAITING_CLARIFICATION': return 'bg-secondary-fixed text-on-secondary-fixed-variant'
       case 'COMPLETED': return 'bg-primary-fixed text-on-primary-fixed-variant'
@@ -68,6 +75,8 @@ export default function NotificationsPage() {
 
   const getBorderColorForType = (type: string) => {
     switch (type) {
+      case 'NEW_ORDER': return 'bg-tertiary'
+      case 'CLARIFICATION_REPLIED': return 'bg-secondary-container'
       case 'DELAYED': return 'bg-error'
       case 'WAITING_CLARIFICATION': return 'bg-secondary-container'
       case 'COMPLETED': return 'bg-surface-tint'
@@ -83,7 +92,9 @@ export default function NotificationsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-stack-lg border-b border-outline-variant pb-stack-md">
         <div>
           <h1 className="font-headline-lg text-headline-lg text-primary mb-stack-xs">Notifications</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">Stay updated with your active print jobs and account activity.</p>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            {isOwner ? 'Monitor new orders and customer activity.' : 'Stay updated with your active print jobs and account activity.'}
+          </p>
         </div>
         <div className="mt-stack-md md:mt-0 flex gap-stack-sm items-center">
           <button 
@@ -120,7 +131,7 @@ export default function NotificationsPage() {
             <div className="text-center py-stack-xl bg-surface-container-lowest rounded-xl border border-outline-variant">
               <span className="material-symbols-outlined text-[48px] text-outline-variant mb-4">notifications_off</span>
               <h3 className="font-headline-md text-primary">No Notifications</h3>
-              <p className="text-on-surface-variant mt-2">You're all caught up!</p>
+              <p className="text-on-surface-variant mt-2">{isOwner ? 'No new order activity yet.' : "You're all caught up!"}</p>
             </div>
           ) : (
             notifications.map((notif) => (
@@ -148,7 +159,7 @@ export default function NotificationsPage() {
                     </p>
                     <div className="mt-stack-md flex gap-stack-md">
                       <Link 
-                        to={`/orders/${notif.orderId}`}
+                        to={isOwner ? `/owner/orders/${notif.orderId}` : `/orders/${notif.orderId}`}
                         className="bg-secondary-container text-white font-label-md text-label-md px-6 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all"
                       >
                         View Order
@@ -173,7 +184,9 @@ export default function NotificationsPage() {
           <div className="bg-primary text-on-primary rounded-xl p-stack-lg shadow-xl relative overflow-hidden">
             <div className="absolute -right-8 -top-8 w-32 h-32 bg-secondary-container/20 rounded-full blur-2xl"></div>
             <h4 className="font-headline-md text-[20px] mb-stack-sm">Notification Settings</h4>
-            <p className="font-body-sm text-body-sm opacity-80 mb-stack-lg">Manage how you receive alerts about your print orders.</p>
+            <p className="font-body-sm text-body-sm opacity-80 mb-stack-lg">
+              {isOwner ? 'Manage how you receive alerts about new orders and customer activity.' : 'Manage how you receive alerts about your print orders.'}
+            </p>
             <div className="space-y-stack-md">
               <label className="flex items-center justify-between cursor-pointer">
                 <span className="font-label-md text-label-md">Email Notifications</span>

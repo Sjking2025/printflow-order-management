@@ -41,6 +41,10 @@ public class ClarificationService {
         Order order = orderRepository.findById(orderId)
             .orElseThrow(() -> new EntityNotFoundException("Order not found"));
 
+        if ("COMPLETED".equals(order.getStatus()) || "CANCELLED".equals(order.getStatus())) {
+            throw new IllegalStateException("Cannot send messages on " + order.getStatus() + " orders");
+        }
+
         // When an owner initiates a clarification, transition through the FSM properly
         // so that: (1) the transition is validated, (2) history is recorded.
         // Previously this was a direct setStatus() call bypassing both FSM and audit trail.
@@ -72,12 +76,13 @@ public class ClarificationService {
         return savedMessage;
     }
 
+    @Transactional(readOnly = true)
     public List<ClarificationResponse> getThread(UUID orderId) {
         return clarificationRepository.findByOrderIdOrderByCreatedAtAsc(orderId)
             .stream()
             .map(c -> new ClarificationResponse(
                 c.getId(), c.getSenderRole(), c.getMessage(),
-                c.getIsRead(), c.getCreatedAt()))
+                Boolean.TRUE.equals(c.getIsRead()), c.getCreatedAt()))
             .collect(Collectors.toList());
     }
 }

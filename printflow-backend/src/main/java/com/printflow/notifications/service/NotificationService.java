@@ -77,8 +77,10 @@ public class NotificationService {
                     null, template.smsMessage());
             }
 
-            saveNotification(customer.getId(), order.getId(), newStatus.name(), "IN_APP",
-                template.emailSubject(), template.emailBody());
+            if (newStatus != OrderStatus.WAITING_CLARIFICATION) {
+                saveNotification(customer.getId(), order.getId(), newStatus.name(), "IN_APP",
+                    template.emailSubject(), template.emailBody());
+            }
 
         } catch (Exception e) {
             log.error("Failed to send notification for order {}: {}", order.getOrderNumber(), e.getMessage());

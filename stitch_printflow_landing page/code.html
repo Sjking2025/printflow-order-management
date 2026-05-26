@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PrintFlow | Digital Order Management for Print Shops</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "surface-container": "#111827",
+                "primary-fixed": "#d5e3ff",
+                "surface-dim": "#0a0c10",
+                "primary-fixed-dim": "#a7c8ff",
+                "tertiary-container": "#592300",
+                "surface-container-lowest": "#020617",
+                "on-secondary-container": "#572000",
+                "inverse-surface": "#f1f5f9",
+                "on-secondary-fixed": "#351000",
+                "tertiary-fixed": "#ffdbca",
+                "on-error": "#ffffff",
+                "tertiary": "#381300",
+                "error": "#ba1a1a",
+                "secondary": "#fe6b00",
+                "on-tertiary-fixed-variant": "#723610",
+                "on-tertiary-fixed": "#341100",
+                "on-primary-fixed-variant": "#1f477b",
+                "on-primary-fixed": "#001b3c",
+                "error-container": "#ffdad6",
+                "on-secondary": "#ffffff",
+                "inverse-on-surface": "#020617",
+                "background": "#020617",
+                "on-primary-container": "#799dd6",
+                "on-surface-variant": "#94a3b8",
+                "on-error-container": "#93000a",
+                "tertiary-fixed-dim": "#ffb690",
+                "secondary-fixed-dim": "#ffb693",
+                "on-background": "#f8fafc",
+                "surface-container-low": "#0f172a",
+                "on-tertiary-container": "#d8885c",
+                "primary": "#001e40",
+                "outline-variant": "#334155",
+                "secondary-fixed": "#ffdbcc",
+                "inverse-primary": "#a7c8ff",
+                "on-surface": "#f8fafc",
+                "primary-container": "#003366",
+                "surface-container-highest": "#1e293b",
+                "surface": "#020617",
+                "outline": "#475569",
+                "on-secondary-fixed-variant": "#7a3000",
+                "surface-tint": "#3a5f94",
+                "surface-container-high": "#1e293b",
+                "surface-bright": "#1e293b",
+                "on-primary": "#ffffff",
+                "surface-variant": "#334155",
+                "secondary-container": "#fe6b00",
+                "on-tertiary": "#ffffff"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "margin-mobile": "16px",
+                "stack-xs": "4px",
+                "stack-sm": "8px",
+                "stack-xl": "40px",
+                "margin-desktop": "48px",
+                "gutter": "32px",
+                "unit": "8px",
+                "stack-md": "16px",
+                "stack-lg": "32px",
+                "container-max-width": "1440px"
+            },
+            "fontFamily": {
+                "display": ["Inter"],
+                "headline-lg": ["Inter"],
+                "headline-md": ["Inter"],
+                "body-lg": ["Inter"],
+                "body-md": ["Inter"],
+                "label-md": ["Inter"]
+            },
+            "fontSize": {
+                "display": ["84px", {"lineHeight": "1", "letterSpacing": "-0.04em", "fontWeight": "900"}],
+                "headline-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                "body-lg": ["22px", {"lineHeight": "32px", "fontWeight": "400"}],
+                "label-md": ["13px", {"lineHeight": "18px", "letterSpacing": "0.2em", "fontWeight": "800"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        :root {
+            --suit-glow: #fe6b00;
+            --hud-blue: #a7c8ff;
+        }
+
+        body {
+            background-color: #020617;
+            overflow-x: hidden;
+        }
+
+        /* Noise Texture Overlay */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            content: "";
+            opacity: 0.03;
+            z-index: 1000;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* Technical Typography */
+        .architectural {
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        /* Suit-up Assemble Animation */
+        .reveal-assemble {
+            opacity: 0;
+            transform: perspective(2000px) translateY(40px) translateZ(-100px) rotateX(15deg);
+            transition: all 1.4s cubic-bezier(0.19, 1, 0.22, 1);
+            filter: blur(10px);
+        }
+        
+        .reveal-assemble.active {
+            opacity: 1;
+            transform: perspective(2000px) translateY(0) translateZ(0) rotateX(0);
+            filter: blur(0);
+        }
+
+        .stagger-1 { transition-delay: 0.15s; }
+        .stagger-2 { transition-delay: 0.3s; }
+        .stagger-3 { transition-delay: 0.45s; }
+        .stagger-4 { transition-delay: 0.6s; }
+
+        /* Ultra-fine Glassmorphism */
+        .glass-hud {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 0.5px solid rgba(167, 200, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .glass-hud:hover {
+            border-color: rgba(254, 107, 0, 0.4);
+            box-shadow: 0 0 40px rgba(254, 107, 0, 0.15);
+        }
+
+        /* Technical Shimmer Border */
+        .shimmer-border {
+            position: relative;
+        }
+        .shimmer-border::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 0.5px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        /* Loader */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: #020617;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s cubic-bezier(0.85, 0, 0.15, 1);
+        }
+
+        .loader-ring {
+            width: 120px;
+            height: 120px;
+            border: 1px solid rgba(167, 200, 255, 0.1);
+            border-top-color: var(--suit-glow);
+            border-radius: 50%;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Magnetic Button Glow */
+        .btn-magnetic {
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 30px rgba(167, 200, 255, 0.3);
+        }
+
+        /* Parallax Background */
+        .parallax-bg {
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .data-grid-thin {
+            background-image: radial-gradient(rgba(167, 200, 255, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+
+        @keyframes scan-vertical {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        
+        .scanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--hud-blue), transparent);
+            box-shadow: 0 0 15px var(--hud-blue);
+            z-index: 9999;
+            pointer-events: none;
+            animation: scan-vertical 4s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden selection:bg-secondary selection:text-white data-grid-thin">
+<div class="noise-overlay"></div>
+<div class="scanner"></div>
+<!-- Loader -->
+<div id="loader">
+<div class="relative">
+<div class="loader-ring"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="font-display font-black text-white text-xl tracking-tighter">PF</span>
+</div>
+</div>
+<div class="mt-8 flex flex-col items-center gap-2">
+<span class="architectural text-[10px] text-primary-fixed/40 tracking-[0.8em]">System Initializing</span>
+<span class="font-mono text-secondary text-2xl" id="load-pct">00%</span>
+</div>
+</div>
+<header class="fixed top-0 left-0 w-full z-[100] px-margin-desktop py-stack-lg transition-all duration-700" id="main-header">
+<div class="max-w-container-max-width mx-auto flex justify-between items-center">
+<div class="font-display text-2xl font-black tracking-tighter text-white flex items-center gap-3">
+<div class="w-2.5 h-2.5 bg-secondary rounded-none rotate-45 animate-pulse"></div>
+            PRINTFLOW
+        </div>
+<nav class="hidden md:flex gap-12 items-center">
+<a class="text-white/40 hover:text-white transition-all font-label-md text-label-md architectural py-1 relative group" href="#features">
+                Features
+                <span class="absolute bottom-0 left-0 w-0 h-[1px] bg-secondary transition-all group-hover:w-full"></span>
+</a>
+<a class="text-white/40 hover:text-white transition-all font-label-md text-label-md architectural py-1" href="#pricing">Pricing</a>
+<a class="text-white/40 hover:text-white transition-all font-label-md text-label-md architectural py-1" href="/docs">Docs</a>
+<a class="text-white/40 hover:text-white transition-all font-label-md text-label-md architectural py-1" href="/contact">Contact</a>
+</nav>
+<div class="flex items-center gap-8">
+<a href="/login" class="hidden md:block text-white/40 font-bold font-label-md text-label-md hover:text-white transition-all uppercase tracking-[0.3em]">Login</a>
+<a href="/login" class="bg-secondary text-white px-8 py-3 rounded-none shimmer-border btn-magnetic font-label-md text-label-md uppercase tracking-[0.4em] shadow-2xl shadow-secondary/20">Get Started</a>
+</div>
+</div>
+</header>
+<main>
+<!-- Cinematic Hero -->
+<section class="relative h-screen flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img alt="Hero Cinematic" class="w-full h-full object-cover scale-105" id="hero-img" src="https://lh3.googleusercontent.com/aida/ADBb0uhehREqoZbxLel4MGRW_S8K8NeUH8e8LXHK3RmG3_XpSgZWZ2uCPOVeoYcOcoZ612G0dBQSKdYzDQ01lzM1ai0qp7elmPHDtg5RHyYuXUuEXsJZ_cRGkQmW0y1kPFfkVkbWDfPOZI1wu0AulecTCOk833j8Q4cswvLNHlXi97OK0nZxHgvsNlVHpapz9hcldgQ_Yy-k1uLRAvxxLAzvwgNifyqkYU_4Yqfvc0bD09jyVq6R1AOicUTYe4c"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"></div>
+<div class="absolute inset-0 bg-gradient-to-b from-background/60 via-transparent to-transparent"></div>
+<div class="absolute inset-0 bg-[#020617]/40"></div>
+</div>
+<div class="relative z-10 max-w-container-max-width mx-auto px-margin-desktop w-full text-center">
+<div class="max-w-6xl mx-auto">
+<span class="inline-block font-label-md text-label-md text-secondary tracking-[1em] uppercase mb-stack-lg reveal-assemble stagger-1">Digital Order Management</span>
+<h1 class="font-display text-[80px] md:text-[140px] mb-stack-lg leading-[0.8] text-white text-glow reveal-assemble stagger-2">
+                    Streamline Your<br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-white via-primary-fixed-dim to-white/20">Print Shop.</span>
+</h1>
+<p class="font-body-lg text-body-lg mb-stack-xl text-primary-fixed/40 max-w-2xl mx-auto architectural tracking-[0.2em] reveal-assemble stagger-3">
+                    Smart Queue // Customer Portal // Real-time Tracking
+                </p>
+<div class="flex flex-wrap justify-center gap-10 reveal-assemble stagger-4">
+<a href="/login" class="bg-white text-black px-12 py-5 font-black text-xs architectural btn-magnetic flex items-center gap-4 hover:bg-secondary hover:text-white transition-colors">
+                        Get Started
+                        <span class="material-symbols-outlined text-sm">login</span>
+</a>
+<a href="#features" class="glass-hud text-white px-12 py-5 font-black text-xs architectural border border-white/10 hover:border-white/30 transition-all">
+                        Learn More
+                    </a>
+</div>
+</div>
+</div>
+<div class="absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-30">
+<span class="architectural text-[9px] tracking-[0.6em]">Explore Features</span>
+<div class="w-[1px] h-12 bg-gradient-to-b from-white to-transparent"></div>
+</div>
+</section>
+<!-- Scroll Storytelling Section -->
+<section class="relative min-h-screen py-40 overflow-hidden parallax-bg" id="scroll-section" style="background-image: linear-gradient(to right, #020617, rgba(2, 6, 23, 0.85)), url('https://lh3.googleusercontent.com/aida/ADBb0ugHM33lF_EbeTfgJlNy7q70-yqO4lqcjvzhLyes0LxPhNm0YUo6Q7wMIHOxKFbP9eUq_0WnPNqAZgW9mENfuNIhIImhLUQZi89MYnMVJMx1EeB_suno5GqwsfsplSKCNcsrf20TYWBwYRKIAh3NrnQaU6soHBJzhXbA0Bzwf7u6YTus5zmxi-0dorKkSRdiJ7tZsnjfQjn4kv9RoLHfDxQ_js6qv4hnjJ4XytM4kZEgZJDeVjVjPKec8Xg');">
+<div class="max-w-container-max-width mx-auto px-margin-desktop relative z-10">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+<div class="reveal-assemble">
+<span class="font-label-md text-label-md text-secondary architectural mb-6 block tracking-[0.5em]">Priority Queue v1.0</span>
+<h2 class="font-headline-lg text-headline-lg text-white mb-stack-lg architectural">Smart Order <br/>Queue.</h2>
+<p class="text-primary-fixed/50 font-body-lg text-body-lg mb-stack-xl max-w-lg leading-relaxed">
+                        Prioritize print jobs with a real-time queue sorted by urgency. CRITICAL, HIGH, and NORMAL levels ensure nothing falls through the cracks.
+                    </p>
+<div class="space-y-4">
+<div class="glass-hud p-6 flex items-center gap-8 group">
+<div class="w-16 h-16 bg-secondary/5 flex items-center justify-center border border-secondary/20">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'wght' 200;">priority_high</span>
+</div>
+<div>
+<h4 class="text-white architectural text-xs font-black tracking-[0.3em]">Priority Levels</h4>
+<p class="text-white/30 text-[10px] mt-2 font-mono uppercase">CRITICAL / HIGH / NORMAL</p>
+</div>
+</div>
+<div class="glass-hud p-6 flex items-center gap-8 group">
+<div class="w-16 h-16 bg-secondary/5 flex items-center justify-center border border-secondary/20">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'wght' 200;">sync</span>
+</div>
+<div>
+<h4 class="text-white architectural text-xs font-black tracking-[0.3em]">Status Tracking</h4>
+<p class="text-white/30 text-[10px] mt-2 font-mono uppercase">Real-time Order Updates</p>
+</div>
+</div>
+</div>
+</div>
+<div class="relative reveal-assemble stagger-2">
+<div class="aspect-square glass-hud p-1 relative overflow-hidden">
+<div class="absolute inset-0 data-grid-thin opacity-20"></div>
+<div class="h-full w-full border border-white/5 flex flex-col items-center justify-center p-12 text-center">
+<div class="text-[140px] font-black text-white/5 leading-none tracking-tighter mb-4">100+</div>
+<p class="text-secondary architectural text-lg font-black">Orders Daily</p>
+<div class="w-48 h-[1px] bg-white/10 my-8"></div>
+<p class="text-white/20 font-mono text-[10px] uppercase">Real-time Status Updates</p>
+</div>
+<!-- UI Corners -->
+<div class="absolute top-4 left-4 w-6 h-6 border-t border-l border-secondary"></div>
+<div class="absolute top-4 right-4 w-6 h-6 border-t border-r border-secondary"></div>
+<div class="absolute bottom-4 left-4 w-6 h-6 border-b border-l border-secondary"></div>
+<div class="absolute bottom-4 right-4 w-6 h-6 border-b border-r border-secondary"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- The Ecosystem - Premium Glass Bento -->
+ <section id="features" class="py-40 bg-background relative border-t border-white/5">
+<div class="max-w-container-max-width mx-auto px-margin-desktop">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-24 gap-8 reveal-assemble">
+<div class="max-w-2xl">
+<h2 class="font-headline-lg text-headline-lg text-white mb-6 architectural tracking-[0.3em]">The Complete Platform.</h2>
+<p class="text-white/30 text-body-lg architectural text-sm tracking-[0.1em]">Everything you need to manage your print shop.</p>
+</div>
+<div class="glass-hud px-6 py-2 border border-secondary/20">
+<span class="text-secondary font-black text-[10px] architectural tracking-[0.4em]">Platform Beta</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8 auto-rows-[350px]">
+<!-- Main Control Hub -->
+<div class="md:col-span-8 md:row-span-2 glass-hud p-12 flex flex-col justify-between group relative overflow-hidden reveal-assemble">
+<div class="absolute -right-20 -top-20 w-80 h-80 bg-secondary/5 rounded-full blur-[100px]"></div>
+<div>
+<div class="flex justify-between items-start mb-16">
+<div>
+<h3 class="font-headline-md text-white mb-4 architectural tracking-[0.2em]">Owner Dashboard</h3>
+<p class="text-white/30 max-w-sm text-sm uppercase tracking-wider">Complete visibility into your print shop operations.</p>
+</div>
+<span class="material-symbols-outlined text-white/5 text-[100px]" style="font-variation-settings: 'wght' 100;">dashboard</span>
+</div>
+<div class="glass-hud p-10 bg-white/5">
+<div class="flex justify-between items-end mb-8">
+<div>
+<span class="text-secondary architectural text-[10px] block mb-2 tracking-[0.5em]">Shop Status</span>
+<span class="text-white font-mono text-5xl font-black">Online</span>
+</div>
+<div class="text-right">
+<span class="text-green-500 font-mono text-xs flex items-center gap-2">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
+                                        ACTIVE
+                                    </span>
+</div>
+</div>
+<div class="h-1 w-full bg-white/5 mb-10 overflow-hidden">
+<div class="h-full bg-secondary w-[84%] shadow-[0_0_20px_rgba(254,107,0,0.8)]"></div>
+</div>
+<div class="grid grid-cols-3 gap-12">
+<div>
+<div class="text-white/20 architectural text-[9px] mb-2">Today's Revenue</div>
+<div class="text-white font-bold text-xl">$2,450</div>
+</div>
+<div>
+<div class="text-white/20 architectural text-[9px] mb-2">Active Orders</div>
+<div class="text-white font-bold text-xl">12</div>
+</div>
+<div>
+<div class="text-white/20 architectural text-[9px] mb-2">Uptime</div>
+<div class="text-white font-bold text-xl">99.9%</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary Mod -->
+<div class="md:col-span-4 md:row-span-1 glass-hud p-10 flex flex-col justify-between group reveal-assemble stagger-1">
+<div>
+<div class="w-16 h-16 bg-white/5 flex items-center justify-center mb-8 shimmer-border">
+<span class="material-symbols-outlined text-secondary text-4xl">shopping_cart</span>
+</div>
+<h3 class="font-headline-md text-white mb-4 architectural text-lg tracking-[0.2em]">Customer Portal</h3>
+<p class="text-white/30 text-sm architectural tracking-wider">Place orders, upload files, and track progress.</p>
+</div>
+<div class="text-white/10 text-[9px] architectural font-black">Self-Service</div>
+</div>
+<!-- Action Mod -->
+<div class="md:col-span-4 md:row-span-1 bg-secondary p-10 flex flex-col justify-between group reveal-assemble stagger-2 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+<div class="relative z-10 h-full flex flex-col justify-between">
+<h3 class="font-headline-md text-white architectural tracking-[0.2em]">Clarification Chat</h3>
+<div class="flex flex-wrap gap-4">
+<div class="px-4 py-2 border border-white/20 bg-black/10 backdrop-blur-sm text-[9px] architectural font-black">Real-time Messaging</div>
+<div class="px-4 py-2 border border-white/20 bg-black/10 backdrop-blur-sm text-[9px] architectural font-black">5 Docs Per Order</div>
+</div>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-white/10 text-[180px] rotate-12 group-hover:rotate-0 transition-transform duration-1000">forum</span>
+</div>
+<!-- Wide Enterprise -->
+<div class="md:col-span-12 glass-hud p-12 flex flex-col md:flex-row items-center gap-16 reveal-assemble stagger-3">
+<div class="flex-1">
+<h3 class="font-headline-md text-white mb-6 architectural tracking-[0.3em]">File Management</h3>
+<p class="text-white/30 text-lg leading-relaxed uppercase text-sm tracking-widest">Upload up to 5 documents per order with per-file configuration. Secure Cloudinary storage, automatic preview generation, and version tracking.</p>
+</div>
+<div class="shrink-0">
+<a href="/login" class="bg-white text-black px-12 py-5 font-black text-xs architectural btn-magnetic flex items-center gap-4 hover:bg-secondary hover:text-white transition-colors">
+                            Try It Free
+                            <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Partners -->
+<section class="py-24 bg-background border-y border-white/5">
+<div class="max-w-container-max-width mx-auto px-margin-desktop">
+<p class="text-center architectural text-[10px] text-white/20 mb-16 tracking-[1.5em]">Trusted By Industry Leaders</p>
+<div class="flex flex-wrap justify-center items-center gap-x-24 gap-y-12 opacity-10 hover:opacity-40 transition-opacity duration-1000">
+<div class="font-black text-2xl architectural">Xerox_Core</div>
+<div class="font-black text-2xl architectural">Heidelberg_Link</div>
+<div class="font-black text-2xl architectural">Canon_Optic</div>
+<div class="font-black text-2xl architectural">Konica_Neural</div>
+<div class="font-black text-2xl architectural">Ricoh_Flow</div>
+</div>
+</div>
+</section>
+<!-- Pricing -->
+<section id="pricing" class="py-40 bg-background border-t border-white/5">
+<div class="max-w-container-max-width mx-auto px-margin-desktop">
+<div class="text-center mb-24 reveal-assemble">
+<span class="font-label-md text-label-md text-secondary architectural block mb-6 tracking-[0.5em]">PRICING</span>
+<h2 class="font-headline-lg text-headline-lg text-white mb-6 architectural tracking-[0.3em]">Simple, Transparent Pricing.</h2>
+<p class="text-white/30 text-body-lg text-sm max-w-xl mx-auto architectural tracking-[0.1em]">No hidden fees. Start free, scale as you grow.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="glass-hud p-10 flex flex-col justify-between group reveal-assemble stagger-1">
+<div>
+<h3 class="font-headline-md text-white mb-2 architectural tracking-[0.2em]">Starter</h3>
+<p class="text-white/30 text-[10px] architectural mb-8 uppercase tracking-widest">For small shops</p>
+<div class="mb-8">
+<span class="text-white font-display text-5xl font-black">Free</span>
+</div>
+<ul class="space-y-4 text-white/40 text-[10px] font-black architectural">
+<li class="flex items-center gap-3"><span class="text-secondary material-symbols-outlined text-sm">check</span> Up to 50 orders/month</li>
+<li class="flex items-center gap-3"><span class="text-secondary material-symbols-outlined text-sm">check</span> Priority queue access</li>
+<li class="flex items-center gap-3"><span class="text-secondary material-symbols-outlined text-sm">check</span> Basic file management</li>
+<li class="flex items-center gap-3"><span class="text-secondary material-symbols-outlined text-sm">check</span> Email support</li>
+</ul>
+</div>
+<a href="/login" class="mt-10 block w-full text-center border border-white/20 text-white py-4 font-black text-xs architectural hover:bg-white/5 transition-all uppercase tracking-[0.3em]">
+Get Started
+</a>
+</div>
+<div class="bg-secondary p-10 flex flex-col justify-between group reveal-assemble stagger-2 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+<div class="relative z-10">
+<h3 class="font-headline-md text-white mb-2 architectural tracking-[0.2em]">Professional</h3>
+<p class="text-white/60 text-[10px] architectural mb-8 uppercase tracking-widest">For growing businesses</p>
+<div class="mb-8">
+<span class="text-white font-display text-5xl font-black">$29</span>
+<span class="text-white/60 text-sm architectural">/month</span>
+</div>
+<ul class="space-y-4 text-white/70 text-[10px] font-black architectural">
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-sm">check</span> Unlimited orders</li>
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-sm">check</span> Priority queue + analytics</li>
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-sm">check</span> Advanced file management</li>
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-sm">check</span> Priority support</li>
+<li class="flex items-center gap-3"><span class="material-symbols-outlined text-sm">check</span> Custom branding</li>
+</ul>
+</div>
+<a href="/login" class="mt-10 block w-full text-center bg-white text-black py-4 font-black text-xs architectural hover:bg-white/90 transition-all uppercase tracking-[0.3em] relative z-10">
+Start Trial
+</a>
+</div>
+<div class="glass-hud p-10 flex flex-col justify-between group reveal-assemble stagger-3">
+<div>
+<h3 class="font-headline-md text-white mb-2 architectural tracking-[0.2em]">Enterprise</h3>
+<p class="text-white/30 text-[10px] architectural mb-8 uppercase tracking-widest">For large print houses</p>
+<div class="mb-8">
+<span class="text-white font-display text-5xl font-black">$99</span>
+<span class="text-white/60 text-sm architectural">/month</span>
+</div>
+<ul class="space-y-4 text-white/40 text-[10px] font-black architectural">
+<li class="flex items-center gap-3"><span class="text-secondary material-symbols-outlined text-sm">check</span> Unlimited orders + users</li>
+<li class="flex items-center gap-3"><span class="text-secondary material-symbols-outlined text-sm">check</span> Full analytics suite</li>
+<li class="flex items-center gap-3"><span class="text-secondary material-symbols-outlined text-sm">check</span> API access</li>
+<li class="flex items-center gap-3"><span class="text-secondary material-symbols-outlined text-sm">check</span> Dedicated account manager</li>
+<li class="flex items-center gap-3"><span class="text-secondary material-symbols-outlined text-sm">check</span> Custom integrations</li>
+</ul>
+</div>
+<a href="/login" class="mt-10 block w-full text-center border border-white/20 text-white py-4 font-black text-xs architectural hover:bg-white/5 transition-all uppercase tracking-[0.3em]">
+Contact Sales
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="relative py-60 overflow-hidden bg-background">
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(254,107,0,0.15),_transparent_70%)]"></div>
+<div class="absolute inset-0 data-grid-thin opacity-10"></div>
+</div>
+<div class="relative z-10 max-w-container-max-width mx-auto px-margin-desktop text-center reveal-assemble">
+<div class="max-w-5xl mx-auto">
+<h2 class="font-display text-[80px] md:text-[120px] text-white mb-12 leading-[0.8] architectural tracking-tighter">Ready to<br/>Streamline?</h2>
+<p class="font-body-lg text-body-lg mb-20 text-white/30 max-w-2xl mx-auto architectural tracking-[0.2em] text-sm">
+                    No Credit Card // Secure Cloud // 5-min Setup
+                </p>
+<div class="flex flex-col sm:flex-row justify-center gap-10">
+<a href="/login" class="bg-secondary text-white px-20 py-8 font-black text-sm architectural btn-magnetic shadow-[0_0_60px_rgba(254,107,0,0.4)] hover:shadow-secondary/60">
+                        Start Free Trial
+                    </a>
+<a href="#features" class="glass-hud text-white px-20 py-8 font-black text-sm architectural border border-white/10 hover:bg-white/5 transition-all">
+                        View Demo
+                    </a>
+</div>
+<div class="mt-20 flex items-center justify-center gap-16 text-white/20 font-black architectural text-[9px] tracking-[0.5em]">
+<span class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-secondary"></span> No Credit Card</span>
+<span class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-secondary"></span> Google Sign-in</span>
+<span class="flex items-center gap-3"><span class="w-1.5 h-1.5 bg-secondary"></span> 5-min Setup</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-background text-white py-24 border-t border-white/5 relative z-10">
+<div class="max-w-container-max-width mx-auto px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-20 mb-32">
+<div class="md:col-span-1">
+<div class="font-display text-2xl font-black tracking-tighter mb-10 architectural text-white">PRINTFLOW</div>
+<p class="text-white/30 text-xs architectural leading-relaxed tracking-widest">Digital order management for modern print shops. Streamline your workflow, delight your customers.</p>
+</div>
+<div>
+<h5 class="font-black text-white mb-10 architectural text-[10px] tracking-[0.6em] text-secondary">Platform</h5>
+<ul class="space-y-5 text-white/30 text-[10px] font-black architectural">
+<li><a class="hover:text-white transition-colors" href="#">Queue System</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Customer Portal</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Owner Dashboard</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-black text-white mb-10 architectural text-[10px] tracking-[0.6em] text-secondary">Resources</h5>
+<ul class="space-y-5 text-white/30 text-[10px] font-black architectural">
+<li><a class="hover:text-white transition-colors" href="#">Documentation</a></li>
+<li><a class="hover:text-white transition-colors" href="#">API Reference</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Status</a></li>
+</ul>
+</div>
+<div>
+<h5 class="font-black text-white mb-10 architectural text-[10px] tracking-[0.6em] text-secondary">Company</h5>
+<ul class="space-y-5 text-white/30 text-[10px] font-black architectural">
+<li><a class="hover:text-white transition-colors" href="#">About</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Blog</a></li>
+<li><a class="hover:text-white transition-colors" href="#">Contact</a></li>
+</ul>
+</div>
+</div>
+<div class="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-10">
+<p class="text-white/10 text-[9px] architectural font-black">© 2025 PRINTFLOW DIGITAL SYSTEMS // ALL RIGHTS RESERVED.</p>
+<div class="flex gap-12 text-white/10 text-[9px] architectural font-black">
+<a class="hover:text-white" href="#">Terms</a>
+<a class="hover:text-white" href="#">Privacy</a>
+<a class="hover:text-white" href="#">Status</a>
+</div>
+</div>
+</div>
+</footer>
+<script>
+    // Loader Logic
+    window.addEventListener('load', () => {
+        let pct = 0;
+        const display = document.getElementById('load-pct');
+        const interval = setInterval(() => {
+            pct += Math.floor(Math.random() * 15) + 5;
+            if (pct >= 100) {
+                pct = 100;
+                clearInterval(interval);
+                setTimeout(() => {
+                    document.getElementById('loader').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loader').style.display = 'none';
+                        document.querySelectorAll('.reveal-assemble').forEach(el => observer.observe(el));
+                    }, 1000);
+                }, 400);
+            }
+            display.innerText = pct.toString().padStart(2, '0') + '%';
+        }, 80);
+    });
+
+    // Header Scroll Logic
+    const header = document.getElementById('main-header');
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            header.classList.add('bg-background/90', 'backdrop-blur-xl', 'py-6', 'border-b', 'border-white/5');
+        } else {
+            header.classList.remove('bg-background/90', 'backdrop-blur-xl', 'py-6', 'border-b', 'border-white/5');
+        }
+    });
+
+    // Scroll Storytelling / Parallax
+    const scrollSection = document.getElementById('scroll-section');
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        if (scrollSection) {
+            const sectionTop = scrollSection.offsetTop;
+            const movement = (scrolled - sectionTop) * 0.2;
+            scrollSection.style.backgroundPosition = `center ${50 + movement}%`;
+        }
+        
+        const heroImg = document.getElementById('hero-img');
+        if (heroImg && scrolled < 1000) {
+            heroImg.style.transform = `scale(${1.05 + scrolled * 0.0001}) translateY(${scrolled * 0.1}px)`;
+        }
+    });
+
+    // Intersection Observer for Suit-up Entrance
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, observerOptions);
+
+    // Initial trigger for visible elements (if loader is skipped or fast)
+    document.querySelectorAll('.reveal-assemble').forEach(el => observer.observe(el));
+
+    // Magnetic HUD Button Physics
+    document.querySelectorAll('.btn-magnetic').forEach(btn => {
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            btn.style.transform = `translate(${x * 0.25}px, ${y * 0.25}px)`;
+            btn.style.boxShadow = `${-x * 0.1}px ${-y * 0.1}px 40px rgba(254, 107, 0, 0.2)`;
+        });
+        
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = `translate(0px, 0px)`;
+            btn.style.boxShadow = '';
+        });
+    });
+
+    // Inertia effect on glass cards
+    document.querySelectorAll('.glass-hud').forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = (e.clientX - rect.left) / rect.width - 0.5;
+            const y = (e.clientY - rect.top) / rect.height - 0.5;
+            card.style.transform = `perspective(1000px) rotateY(${x * 4}deg) rotateX(${-y * 4}deg) translateZ(10px)`;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = `perspective(1000px) rotateY(0deg) rotateX(0deg) translateZ(0px)`;
+        });
+    });
+</script>
+</body></html>

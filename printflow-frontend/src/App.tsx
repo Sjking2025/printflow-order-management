@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useAuthStore } from './store/auth.store'
 import LoginPage from './pages/auth/LoginPage'
+import LandingPage from './pages/LandingPage'
+import DocsPage from './pages/DocsPage'
+import ContactPage from './pages/ContactPage'
 import OrderListPage from './pages/customer/OrderListPage'
 import OrderDetailPage from './pages/customer/OrderDetailPage'
 import NewOrderPage from './pages/customer/NewOrderPage'
@@ -96,7 +99,9 @@ export default function App() {
           <Route path="/owner/closure" element={<ClosurePage />} />
         </Route>
 
-        <Route path="/" element={<Navigate to="/orders" replace />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/docs" element={<DocsPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>

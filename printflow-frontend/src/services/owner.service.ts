@@ -8,6 +8,7 @@ export interface DashboardStats {
   inProgressOrders: number
   completedToday: number
   revenueToday: number
+  revenueLifetime: number
   delayedOrders: number
 }
 

@@ -54,6 +54,13 @@ export default function DashboardPage() {
       note: `${stats?.completedToday ?? 0} completed orders`,
     },
     {
+      label: 'Lifetime Revenue',
+      value: formatCurrency(stats?.revenueLifetime ?? 0),
+      icon: 'account_balance',
+      iconColor: 'text-primary',
+      note: 'All-time earnings',
+    },
+    {
       label: 'Delayed Orders',
       value: stats?.delayedOrders ?? 0,
       icon: 'schedule',

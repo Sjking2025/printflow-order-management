@@ -48,6 +48,10 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
            "AND o.updatedAt >= :since")
     long countCompletedSince(@Param("shopId") UUID shopId, @Param("since") java.time.OffsetDateTime since);
 
+    @Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o " +
+           "WHERE o.shopId = :shopId AND o.status = 'COMPLETED'")
+    double totalRevenue(@Param("shopId") UUID shopId);
+
     @Query("SELECT o.customerId, COUNT(o), MAX(o.createdAt) FROM Order o " +
            "WHERE o.shopId = :shopId " +
            "GROUP BY o.customerId")

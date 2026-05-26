@@ -10,11 +10,11 @@ export interface ClarificationMessage {
 }
 
 export const getClarificationThread = async (orderId: string) => {
-  const { data } = await api.get<ApiResponse<ClarificationMessage[]>>(`/clarifications/${orderId}`)
+  const { data } = await api.get<ApiResponse<ClarificationMessage[]>>(`/orders/${orderId}/clarifications`)
   return data.data
 }
 
 export const sendClarificationMessage = async (orderId: string, message: string) => {
-  const { data } = await api.post<ApiResponse<ClarificationMessage>>(`/clarifications/${orderId}`, { message })
+  const { data } = await api.post<ApiResponse<ClarificationMessage>>(`/orders/${orderId}/clarifications`, { message })
   return data.data
 }

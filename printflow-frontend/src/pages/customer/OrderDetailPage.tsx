@@ -101,13 +101,15 @@ export default function OrderDetailPage() {
                 <span className="material-symbols-outlined text-[18px]">edit</span>
                 Edit Quantities
               </button>
-              <button 
-                onClick={() => setClarifyDrawerOpen(true)}
-                className="btn-primary w-full"
-              >
-                <span className="material-symbols-outlined text-[18px]">chat_bubble</span>
-                Request Clarification
-              </button>
+              {order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
+                <button 
+                  onClick={() => setClarifyDrawerOpen(true)}
+                  className="btn-primary w-full"
+                >
+                  <span className="material-symbols-outlined text-[18px]">chat_bubble</span>
+                  Request Clarification
+                </button>
+              )}
             </div>
           </Card>
         </div>

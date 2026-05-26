@@ -41,6 +41,7 @@ public class QueueService {
         long inProgressOrders,
         long completedToday,
         double revenueToday,
+        double revenueLifetime,
         long delayedOrders
     ) {}
 
@@ -88,6 +89,8 @@ public class QueueService {
             java.time.OffsetDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
         long completedToday = orderRepository.countCompletedSince(shopId, startOfDay);
 
-        return new DashboardStats(pending, urgent, inProgress, completedToday, revenue, delayed);
+        double lifetimeRevenue = orderRepository.totalRevenue(shopId);
+
+        return new DashboardStats(pending, urgent, inProgress, completedToday, revenue, lifetimeRevenue, delayed);
     }
 }

@@ -19,6 +19,7 @@ const QUICK_REPLIES = [
 
 export default function ClarificationDrawer({ isOpen, onClose, order }: Props) {
   const [message, setMessage] = useState('')
+  const [sendError, setSendError] = useState('')
   const user = useAuthStore(s => s.user)
   const isOwner = user?.role === 'OWNER'
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -35,8 +36,12 @@ export default function ClarificationDrawer({ isOpen, onClose, order }: Props) {
     mutationFn: (msg: string) => sendClarificationMessage(order.id, msg),
     onSuccess: () => {
       setMessage('')
+      setSendError('')
       queryClient.invalidateQueries({ queryKey: ['clarifications', order.id] })
       queryClient.invalidateQueries({ queryKey: ['order', order.id] })
+    },
+    onError: (err: any) => {
+      setSendError(err.response?.data?.error?.message || err.response?.data?.message || err.message || 'Failed to send message')
     }
   })
 
@@ -126,6 +131,12 @@ export default function ClarificationDrawer({ isOpen, onClose, order }: Props) {
 
         {/* Footer / Input */}
         <div className="p-4 border-t border-outline-variant bg-surface-container-lowest">
+          {sendError && (
+            <div className="mb-3 p-2 bg-error-container text-on-error-container text-sm rounded flex items-center gap-2">
+              <span className="material-symbols-outlined text-[16px]">error</span>
+              {sendError}
+            </div>
+          )}
           {/* Quick Replies (Owner Only) */}
           {isOwner && messages.length === 0 && (
             <div className="flex gap-2 overflow-x-auto pb-3 mb-3 custom-scrollbar">
