@@ -77,8 +77,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleGatewayError(
             GatewayOrderCreationException ex) {
         log.error("Gateway order creation failed", ex);
-        return buildError(HttpStatus.BAD_GATEWAY, "GATEWAY_ERROR",
-            "Payment gateway unavailable. Please try again.");
+        return buildError(HttpStatus.BAD_GATEWAY, "GATEWAY_ERROR", ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
