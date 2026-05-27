@@ -1,6 +1,6 @@
 # Architecture Map
-Last Updated: 2026-05-26
-Analyzed Commit: 18d5449 (ui-redesign, 9 ahead of main)
+Last Updated: 2026-05-27
+Analyzed Commit: 896e264 (feature/razorpay-integration)
 
 ## System Overview
 PrintFlow is a digital order management platform for Xerox/print shops in India. It replaces the
@@ -22,13 +22,15 @@ backed by PostgreSQL with Flyway migrations and Firebase for Google OAuth.
 | `printflow-backend/src/main/java/com/printflow/clarifications/` | Owner↔Customer messaging per order | `ClarificationService.java` |
 | `printflow-backend/src/main/java/com/printflow/queue/` | Owner dashboard & priority queue | `QueueService.java` |
 | `printflow-backend/src/main/java/com/printflow/shops/` | Shop config, pricing, closure management | `ShopService.java`, `PriceCalculationService.java` |
+| `printflow-backend/src/main/java/com/printflow/razorpay/` | Razorpay payment gateway integration | `RazorpayController.java`, `RazorpayService.java` |
 | `printflow-backend/src/main/java/com/printflow/uploads/` | Cloudinary signed URL generation | `CloudinaryService.java`, `FileValidationService.java` |
 | `printflow-backend/src/main/java/com/printflow/users/` | User CRUD, Firebase→local user sync | `UserService.java` |
 | `printflow-backend/src/main/java/com/printflow/common/` | Cross-cutting: security, CORS, config, DTOs, exceptions | `SecurityConfig.java`, `GlobalExceptionHandler.java` |
 | `printflow-backend/src/main/resources/db/migration/` | Flyway SQL migrations V1–V11 | `V4__create_orders.sql`, `V11__seed_default_price_config.sql` |
-| `printflow-frontend/src/pages/customer/` | Customer-facing SPA pages | `NewOrderPage.tsx`, `OrderListPage.tsx`, `OrderDetailPage.tsx` |
-| `printflow-frontend/src/pages/owner/` | Owner dashboard SPA pages | `DashboardPage.tsx`, `QueuePage.tsx`, `OwnerOrderDetailPage.tsx` |
+| `printflow-frontend/src/pages/customer/` | Customer-facing SPA pages | `NewOrderPage.tsx`, `OrderListPage.tsx`, `OrderDetailPage.tsx`, `NotificationsPage.tsx` |
+| `printflow-frontend/src/pages/owner/` | Owner dashboard SPA pages | `DashboardPage.tsx`, `QueuePage.tsx`, `OwnerOrderDetailPage.tsx`, `SettingsPage.tsx`, `ClosurePage.tsx`, `CustomersPage.tsx` |
 | `printflow-frontend/src/pages/auth/` | Login page (Google OAuth via Firebase) | `LoginPage.tsx` |
+| `printflow-frontend/src/pages/` | Public marketing pages (dark theme) | `LandingPage.tsx`, `DocsPage.tsx`, `ContactPage.tsx`, `NotFoundPage.tsx` |
 | `printflow-frontend/src/services/` | Axios-based API client modules | `api.ts`, `orders.service.ts`, `payments.service.ts` |
 | `printflow-frontend/src/store/` | Zustand global state (auth + shop) | `auth.store.ts`, `shop.store.ts` |
 | `printflow-frontend/src/hooks/` | React Query hooks wrapping services | `useOrders.ts`, `useOwnerQueue.ts`, `usePriceCalculator.ts` |

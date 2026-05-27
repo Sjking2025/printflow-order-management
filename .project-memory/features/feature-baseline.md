@@ -1,6 +1,6 @@
 # Feature Baseline
-Generated: 2026-05-26
-Commit: 18d5449 (ui-redesign, 9 ahead of main)
+Generated: 2026-05-27
+Commit: 896e264 (feature/razorpay-integration)
 
 ## ✅ Implemented Features
 
@@ -38,6 +38,17 @@ Commit: 18d5449 (ui-redesign, 9 ahead of main)
 | Frontend Route Guards | `App.tsx` (ProtectedRoute, OwnerRoute) | Redirects unauthenticated/wrong-role users |
 | Default Price Seeding | `V11__seed_default_price_config.sql` | Reasonable defaults seeded on DB migration |
 | Actuator Health Check | `/actuator/health` | No auth; suitable for load balancer probes |
+| Landing Page | `LandingPage.tsx`, `LandingPage.css`, `code.html` | Dark-themed marketing page with hero, features, pricing, CTAs |
+| Documentation Page | `DocsPage.tsx` | `/docs` route with Quick Start, Queue, File, Payments docs |
+| Contact Page | `ContactPage.tsx` | `/contact` route with form + info cards |
+| Pricing Section | LandingPage (anchor `#pricing`) | 3 tiers: Free, $29/mo, $99/mo |
+| Notifications: P1–P4 Fixes | `NotificationService.java`, `NotificationsPage.tsx` | Skip IN_APP on WAITING_CLARIFICATION; role-aware icons/text/links |
+| Clarification 500/409 Fixes | `ClarificationService.java`, `clarifications.service.ts` | URL path fix; block COMPLETED/CANCELLED orders |
+| Owner Chat Access | `OwnerOrderDetailPage.tsx` | Persistent "Open Chat" button in actions sidebar |
+| Lifetime Revenue | `OrderRepository.java`, `QueueService.java`, `DashboardPage.tsx` | All-time SUM of COMPLETED order amounts |
+| Copy Modification (V14) | `OrderDocumentService.java`, `OrderDetailPage.tsx`, `SettingsPage.tsx` | Increase-only, time window, once per document |
+| Razorpay Payment Gateway | `PaymentService.java`, `RazorpayController.java`, `NewOrderPage.tsx` | Hybrid UPI/Netbanking/Wallet payment integration |
+| Razorpay V16 Migration | `V16__convert_enums_to_varchar.sql` | Convert Postgres ENUM columns to VARCHAR for Hibernate compatibility |
 
 ## 🧊 Abandoned / Dormant
 
@@ -75,4 +86,7 @@ Commit: 18d5449 (ui-redesign, 9 ahead of main)
 | GET | `/api/v1/notifications` | `NotificationController.list` | ✅ | Any |
 | PATCH | `/api/v1/notifications/{id}/read` | `NotificationController.markRead` | ✅ | Any |
 | POST | `/api/v1/uploads/sign` | `UploadController.sign` | ✅ | Any |
+| POST | `/api/v1/orders/{orderId}/pay` | `RazorpayController.createOrder` | ✅ | CUSTOMER |
+| POST | `/api/v1/payments/razorpay/verify` | `RazorpayController.verifyPayment` | ✅ | CUSTOMER |
+| POST | `/api/v1/payments/razorpay/webhook` | `RazorpayController.handleWebhook` | ❌ | Any (webhook) |
 | GET | `/actuator/health` | Spring Actuator | ❌ | Any |

@@ -1,5 +1,5 @@
 # Unstable Systems Register
-Last Updated: 2026-05-26
+Last Updated: 2026-05-27
 
 ## ✅ Resolved Since Last Update
 
@@ -13,6 +13,11 @@ Last Updated: 2026-05-26
 | ~~Order Status History never persisted~~ | `OrderStatusService.java` | `historyRepository.save(history)` called on every transition |
 | ~~Order Lock Timer not enforced~~ | `OrderStatusService.java` | `lockExpiresAt` checked during transition validation |
 | ~~Twilio WhatsApp/SMS not wired~~ | `WhatsAppService.java`, `SmsService.java` | Both call `Message.creator(...).create()` |
+| ~~IN_APP notification on WAITING_CLARIFICATION~~ | `NotificationService.java` | Skip IN_APP save when status is WAITING_CLARIFICATION |
+| ~~Clarification 500 on terminal orders~~ | `ClarificationService.java` | IllegalStateException → 409 for COMPLETED/CANCELLED |
+| ~~NotificationsPage missing icons/links~~ | `NotificationsPage.tsx` | Added role-aware icons, links, and text |
+| ~~No lifetime revenue metric~~ | `OrderRepository.java`, `QueueService.java` | Added `totalRevenue()` JPQL query |
+| ~~Postgres ENUM incompatibility with Hibernate~~ | `V16__convert_enums_to_varchar.sql` | ENUM columns converted to VARCHAR |
 
 ## 🔴 Remaining Security Issues
 

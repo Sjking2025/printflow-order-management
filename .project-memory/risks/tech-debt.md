@@ -1,8 +1,20 @@
 # Tech Debt Register
-Last Updated: 2026-05-26
-Verified: All 11 implementation plan items confirmed implemented
+Last Updated: 2026-05-27
+Verified: All 11 implementation plan items + P1–P4 notifications + clarifications + landing page + Razorpay confirmed implemented
 
 ## Previously Critical Items — ✅ All Verified Fixed
+
+| File | Issue | Status | Verification |
+|------|-------|--------|-------------|
+| `notifications/service/NotificationService.java` | ~~IN_APP notification saved on WAITING_CLARIFICATION~~ | ✅ **FIXED** | Skip IN_APP save when `newStatus == WAITING_CLARIFICATION` |
+| `frontend/pages/customer/NotificationsPage.tsx` | ~~Missing icons, broken "View Order" links, static text~~ | ✅ **FIXED** | Added icons + role-aware links + role-aware text |
+| `frontend/services/clarifications.service.ts` | ~~Wrong URL path (/clarifications/{id} → /orders/{id}/clarifications)~~ | ✅ **FIXED** | URL path corrected |
+| `backend/clarifications/service/ClarificationService.java` | ~~500 error on COMPLETED/CANCELLED orders~~ | ✅ **FIXED** | Added `IllegalStateException` → 409 |
+| `frontend/pages/customer/OrderDetailPage.tsx` | ~~"Request Clarification" shown on terminal orders~~ | ✅ **FIXED** | Button hidden for COMPLETED/CANCELLED |
+| `frontend/pages/owner/OwnerOrderDetailPage.tsx` | ~~Missing persistent chat access~~ | ✅ **FIXED** | "Open Chat" button always visible in sidebar |
+| `backend/orders/repository/OrderRepository.java` | ~~No lifetime revenue query~~ | ✅ **FIXED** | Added `totalRevenue(shopId)` JPQL |
+
+
 
 | File | Issue | Status | Verification |
 |------|-------|--------|-------------|
