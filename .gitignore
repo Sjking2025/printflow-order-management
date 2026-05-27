@@ -8,6 +8,10 @@ printflow-v2-firebase-adminsdk-*.json
 PrintFlow_Master Documents/
 stitch_printflow_*/
 
+# --- Project memory (AI context, not code) ---
+.project-memory/
+.project-memory.zip
+
 # --- Dependencies ---
 **/node_modules/
 **/.pnp
